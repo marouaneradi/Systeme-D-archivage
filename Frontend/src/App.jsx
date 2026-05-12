@@ -14,10 +14,11 @@ import Login from './components/Login';
 import { AnimatePresence, motion } from 'motion/react';
 
 export default function App() {
-  const [user, setUser]             = useState(null);
-  const [authLoading, setAuthLoading] = useState(true); // NEW: verify token on startup
-  const [activePage, setActivePage] = useState('dashboard');
-  const [selectedPvId, setSelectedPvId] = useState(null);
+  const [user, setUser]               = useState(null);
+  const [authLoading, setAuthLoading]  = useState(true);
+  const [activePage, setActivePage]    = useState('dashboard');
+  const [selectedPvId, setSelectedPvId]= useState(null);
+  const [sidebarOpen, setSidebarOpen]  = useState(false); // mobile drawer
 
   // ── On mount: verify token via /auth/me ──────────────────────────
   useEffect(() => {
@@ -135,12 +136,19 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-surface flex">
-      <Sidebar activePage={activePage} onPageChange={setActivePage} user={user} onLogout={handleLogout} />
+      <Sidebar
+          activePage={activePage}
+          onPageChange={setActivePage}
+          user={user}
+          onLogout={handleLogout}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
 
-      <main className="flex-1 ml-[260px] min-h-screen flex flex-col">
-        <TopBar activeLabel={getPageLabel()} user={user} onLogout={handleLogout} onNavigate={openPvDetail} />
+      <main className="flex-1 lg:ml-[260px] min-h-screen flex flex-col">
+        <TopBar activeLabel={getPageLabel()} user={user} onLogout={handleLogout} onNavigate={openPvDetail} onMenuToggle={() => setSidebarOpen(true)} />
 
-        <div className="p-8 lg:p-12 max-w-[1440px] mx-auto w-full flex-1">
+        <div className="p-4 sm:p-6 lg:p-10 xl:p-12 max-w-[1440px] mx-auto w-full flex-1">
           <AnimatePresence mode="wait">
             <motion.div
               key={activePage}

@@ -96,9 +96,9 @@ export const DocumentsList = ({ onViewPv }) => {
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-primary tracking-tighter uppercase">Documents PV</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-primary tracking-tighter uppercase">Documents PV</h1>
           <p className="text-secondary text-sm font-medium mt-1">
             Gestion complète des archives documentaires et scans.
             {totalCount > 0 && (
@@ -106,38 +106,38 @@ export const DocumentsList = ({ onViewPv }) => {
             )}
           </p>
         </div>
-        <div className="flex gap-3">
-          <div className="relative group">
+        <div className="flex gap-2 w-full sm:w-auto">
+          <div className="relative group flex-1 sm:flex-none">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher filière, module, groupe…"
-              className="pl-10 pr-4 py-2 bg-white border border-outline-variant/50 rounded-lg text-sm w-full md:w-72 focus:ring-2 focus:ring-primary-container outline-none transition-all"
+              placeholder="Rechercher filière, module…"
+              className="pl-10 pr-4 py-2 bg-white border border-outline-variant/50 rounded-lg text-sm w-full sm:w-64 md:w-72 focus:ring-2 focus:ring-primary-container outline-none transition-all"
             />
           </div>
           <button
             onClick={() => setShowFilters((v) => !v)}
-            className={`flex items-center gap-2 px-4 py-2 border rounded-lg font-bold text-[10px] uppercase tracking-[0.15em] transition-all ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg font-bold text-[10px] uppercase tracking-[0.15em] transition-all flex-shrink-0 ${
               showFilters || typeFilter || statusFilter
                 ? 'border-primary bg-primary text-white'
                 : 'border-outline-variant/60 bg-white text-secondary hover:text-primary hover:bg-surface-container-low'
             }`}
           >
             <Filter size={16} />
-            Filtres {(typeFilter || statusFilter) ? '●' : ''}
+            <span className="hidden sm:inline">Filtres</span> {(typeFilter || statusFilter) ? '●' : ''}
           </button>
         </div>
       </div>
 
       {/* Filter bar */}
       {showFilters && (
-        <div className="flex flex-wrap gap-3 p-4 bg-white border border-outline-variant/50 rounded-xl">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 p-4 bg-white border border-outline-variant/50 rounded-xl">
           <select
             value={typeFilter}
             onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 border border-outline-variant/50 rounded-lg text-xs font-bold bg-surface-container-low outline-none focus:ring-2 focus:ring-primary"
+            className="px-3 py-2 border border-outline-variant/50 rounded-lg text-xs font-bold bg-surface-container-low outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
           >
             <option value="">Tous les types</option>
             <option value="PV_FF">PV-FF</option>
@@ -147,7 +147,7 @@ export const DocumentsList = ({ onViewPv }) => {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 border border-outline-variant/50 rounded-lg text-xs font-bold bg-surface-container-low outline-none focus:ring-2 focus:ring-primary"
+            className="px-3 py-2 border border-outline-variant/50 rounded-lg text-xs font-bold bg-surface-container-low outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
           >
             <option value="">Tous les statuts</option>
             {Object.entries(STATUS_MAP).map(([k, v]) => (
@@ -257,8 +257,8 @@ export const DocumentsList = ({ onViewPv }) => {
                       <td className="px-6 py-4 text-center">
                         <StatusBadge status={doc.status} />
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <td className="px-3 sm:px-6 py-4 text-right">
+                        <div className="flex justify-end items-center gap-1">
                           <button
                             onClick={() => onViewPv?.(doc.id)}
                             className="p-2 text-secondary hover:text-primary hover:bg-surface-container-low rounded-full transition-all"
@@ -285,7 +285,7 @@ export const DocumentsList = ({ onViewPv }) => {
         </div>
 
         {/* Pagination */}
-        <div className="px-8 py-5 border-t border-outline-variant/20 bg-surface-container-low/20 flex items-center justify-between">
+        <div className="px-4 sm:px-8 py-4 border-t border-outline-variant/20 bg-surface-container-low/20 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-[11px] font-bold text-secondary uppercase tracking-widest">
             {totalCount === 0
               ? 'Aucun document'

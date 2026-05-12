@@ -115,14 +115,14 @@ export const Dashboard = ({ onNavigate, user }) => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-primary tracking-tight">Tableau de bord</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-primary tracking-tight">Tableau de bord</h1>
           <p className="text-secondary mt-1 text-sm">Résumé analytique et statistiques de gestion des documents.</p>
         </div>
         <div className="flex gap-3">
           {canAddPv && (
             <button
               onClick={() => onNavigate?.('add')}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-primary-container transition-colors shadow-lg shadow-primary/10"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-primary-container transition-colors shadow-lg shadow-primary/10"
             >
               <Plus size={16} />
               Nouveau PV
