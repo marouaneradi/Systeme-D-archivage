@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\PvFileController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\TrainingCatalogController;
+use App\Http\Controllers\Api\TrainingImportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -76,6 +78,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── Dashboard stats — all roles ───────────────────────────────
     Route::get('dashboard/stats', [PvDocumentController::class, 'dashboardStats']);
+
+    // ── Training catalog — read: all authenticated roles ─────────────
+    Route::get('training/academic-years', [TrainingCatalogController::class, 'academicYears']);
+    Route::get('training/sectors',        [TrainingCatalogController::class, 'sectors']);
+    Route::get('training/levels',         [TrainingCatalogController::class, 'levels']);
+    Route::get('training/filieres',       [TrainingCatalogController::class, 'filieres']);
+    Route::get('training/creneaux',       [TrainingCatalogController::class, 'creneaux']);
+    Route::get('training/groups',         [TrainingCatalogController::class, 'groups']);
+
+    // ── Training write — admin only ────────────────────────────────
+    Route::middleware('role:admin')->group(function () {
+        Route::post('training/academic-years', [TrainingCatalogController::class, 'store']);
+        Route::post('training/import',         [TrainingImportController::class, 'store']);
+    });
 
     // ── User Management (Phase 8) — admin only ────────────────────
     Route::middleware('role:admin')->group(function () {

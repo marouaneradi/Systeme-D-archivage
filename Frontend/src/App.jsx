@@ -8,6 +8,7 @@ import { AddPV } from './components/AddPV';
 import { AdvancedSearch } from './components/AdvancedSearch';
 import { ActivityLog } from './components/ActivityLog';
 import { PvDetail } from './components/PvDetail';
+import { TrainingImport } from './components/TrainingImport';
 import { UserManagement } from './components/UserManagement';
 import { Settings } from './components/Settings';
 import Login from './components/Login';
@@ -84,6 +85,7 @@ export default function App() {
     const role = user.role;
     const restricted = {
       users:    ['admin'],
+      training: ['admin', 'gestionnaire'],
       activity: ['admin', 'gestionnaire'],
       settings: ['admin'],
     };
@@ -111,6 +113,7 @@ export default function App() {
       case 'dashboard': return <Dashboard onNavigate={setActivePage} user={user} />;
       case 'documents': return <DocumentsList onViewPv={openPvDetail} />;
       case 'add':       return <AddPV onNavigate={setActivePage} />;
+      case 'training':  return <TrainingImport onNavigate={setActivePage} user={user} />;
       case 'search':    return <AdvancedSearch onViewPv={openPvDetail} />;
       case 'activity':  return <ActivityLog />;
       case 'pv-detail': return <PvDetail pvId={selectedPvId} onBack={closePvDetail} onViewPv={openPvDetail} />;
@@ -125,6 +128,7 @@ export default function App() {
       dashboard: 'Tableau de bord',
       documents: 'Documents PV',
       add:       'Nouvel Ajout',
+      training:  'Nouvelle Promotion',
       search:    'Recherche Avancée',
       activity:  "Journal d'activité",
       'pv-detail': 'Détail du document',

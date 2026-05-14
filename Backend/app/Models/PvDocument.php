@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\AcademicYear;
+use App\Models\Filiere;
+use App\Models\TrainingGroup;
 
 class PvDocument extends Model
 {
@@ -18,6 +21,9 @@ class PvDocument extends Model
         'niveau',
         'filiere',
         'groupe',
+        'academic_year_id',
+        'filiere_id',
+        'training_group_id',
         'pv_ff_id',
         'semester',
         'session',
@@ -57,6 +63,21 @@ class PvDocument extends Model
     public function children(): HasMany
     {
         return $this->hasMany(PvDocument::class, 'pv_ff_id');
+    }
+
+    public function academicYearRelation(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id');
+    }
+
+    public function filiereRelation(): BelongsTo
+    {
+        return $this->belongsTo(Filiere::class, 'filiere_id');
+    }
+
+    public function trainingGroup(): BelongsTo
+    {
+        return $this->belongsTo(TrainingGroup::class, 'training_group_id');
     }
 
     /** All uploaded scan files for this PV */

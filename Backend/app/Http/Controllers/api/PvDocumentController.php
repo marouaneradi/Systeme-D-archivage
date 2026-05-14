@@ -272,11 +272,14 @@ class PvDocumentController extends Controller
         return match ($type) {
             'PV_FF' => [
                 ...$common,
-                'type'          => [$required, Rule::in(['PV_FF'])],
-                'academic_year' => [$required, 'string', 'max:20'],
-                'niveau'        => [$required, 'string', 'max:50'],
-                'filiere'       => [$required, 'string', 'max:100'],
-                'groupe'        => [$required, 'string', 'max:20'],
+                'type'              => [$required, Rule::in(['PV_FF'])],
+                'academic_year'     => [$required, 'string', 'max:20'],
+                'niveau'            => [$required, 'string', 'max:50'],
+                'filiere'           => [$required, 'string', 'max:100'],
+                'groupe'            => [$required, 'string', 'max:20'],
+                'academic_year_id'  => ['nullable', 'exists:academic_years,id'],
+                'filiere_id'        => ['nullable', 'exists:filieres,id'],
+                'training_group_id' => ['nullable', 'exists:training_groups,id'],
             ],
             'PV_CC' => [
                 ...$common,

@@ -6,16 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 
-// ── Static options ─────────────────────────────────────────────────
-const NIVEAUX = ['Technicien Spécialisé', 'Technicien', 'Qualification', 'Spécialisation'];
-
-// Generate last 10 academic years dynamically
-const currentYear = new Date().getFullYear();
-const ACADEMIC_YEARS = Array.from({ length: 10 }, (_, i) => {
-  const y = currentYear - i;
-  return `${y}-${y + 1}`;
-});
-const SEMESTERS      = ['Semestre 1', 'Semestre 2'];
+const SEMESTERS = ['Semestre 1', 'Semestre 2'];
 
 const PV_TYPES = [
   {
@@ -56,40 +47,35 @@ const FieldLabel = ({ children }) => (
 const inputCls  = 'w-full bg-surface-container-low/50 border border-outline-variant/50 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-primary focus:bg-white outline-none transition-all';
 const selectCls = `${inputCls} appearance-none cursor-pointer`;
 
-// ── PV-FF form ─────────────────────────────────────────────────────
-const FormPvFF = ({ form, onChange }) => (
+// ── PV-FF form (cascading dynamic selects) ────────────────────────
+const FormPvFF = ({ form, onChange, academicYears, filieres, groups, loadingYears, loadingFil, loadingGroups }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
     <div className="space-y-1.5">
-      <FieldLabel>Année universitaire *</FieldLabel>
-      <input
-        list="academic-years-list"
-        type="text"
-        value={form.academicYear}
-        onChange={(e) => onChange('academicYear', e.target.value)}
-        placeholder="Ex: 2019-2020"
-        className={inputCls}
-      />
-      <datalist id="academic-years-list">
-        {ACADEMIC_YEARS.map((y) => <option key={y} value={y} />)}
-      </datalist>
-      <p className="text-[10px] text-outline font-medium ml-1">
-        Sélectionnez une suggestion ou saisissez manuellement.
-      </p>
-    </div>
-    <div className="space-y-1.5">
-      <FieldLabel>Niveau d'étude *</FieldLabel>
-      <select value={form.niveau} onChange={(e) => onChange('niveau', e.target.value)} className={selectCls}>
-        <option value="">— Sélectionner —</option>
-        {NIVEAUX.map((n) => <option key={n}>{n}</option>)}
+      <FieldLabel>Année académique *</FieldLabel>
+      <select value={form.academicYearId} onChange={(e) => onChange('academicYearId', e.target.value)} className={selectCls} disabled={loadingYears}>
+        <option value="">{loadingYears ? 'Chargement…' : '— Sélectionner —'}</option>
+        {academicYears.map((y) => <option key={y.id} value={y.id}>{y.label}</option>)}
       </select>
     </div>
     <div className="space-y-1.5">
-      <FieldLabel>Filière / Programme *</FieldLabel>
-      <input type="text" value={form.filiere} onChange={(e) => onChange('filiere', e.target.value)} placeholder="Ex: Développement Digital" className={inputCls} />
+      <FieldLabel>Filière *</FieldLabel>
+      <select value={form.filiereId} onChange={(e) => onChange('filiereId', e.target.value)} className={selectCls} disabled={!form.academicYearId || loadingFil}>
+        <option value="">{loadingFil ? 'Chargement…' : (!form.academicYearId ? `— Choisir une année d'abord —` : '— Sélectionner —')}</option>
+        {filieres.map((f) => <option key={f.id} value={f.id}>{f.name} ({f.code})</option>)}
+      </select>
+    </div>
+    <div className="space-y-1.5">
+      <FieldLabel>Niveau</FieldLabel>
+      <div className={`${inputCls} bg-surface-container-low/30 text-secondary ${form.niveau ? 'text-primary font-black' : ''}`}>
+        {form.niveau || '— auto-rempli après filière —'}
+      </div>
     </div>
     <div className="space-y-1.5">
       <FieldLabel>Groupe *</FieldLabel>
-      <input type="text" value={form.groupe} onChange={(e) => onChange('groupe', e.target.value)} placeholder="Ex: dev202" className={inputCls} />
+      <select value={form.groupeId} onChange={(e) => onChange('groupeId', e.target.value)} className={selectCls} disabled={!form.filiereId || loadingGroups}>
+        <option value="">{loadingGroups ? 'Chargement…' : (!form.filiereId ? `— Choisir une filière d'abord —` : '— Sélectionner —')}</option>
+        {groups.map((g) => <option key={g.id} value={g.id}>{g.code}{g.name ? ` — ${g.name}` : ''}</option>)}
+      </select>
     </div>
   </div>
 );
@@ -178,15 +164,23 @@ const FormPvEFM = ({ form, onChange, pvFfList, pvFfLoading }) => (
 export const AddPV = ({ onNavigate }) => {
   const [pvType,        setPvType]        = useState('PV_FF');
   const [dragActive,    setDragActive]    = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState([]); // File objects
+  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [pvFfList,      setPvFfList]      = useState([]);
   const [pvFfLoading,   setPvFfLoading]   = useState(false);
   const [submitting,    setSubmitting]    = useState(false);
   const [error,         setError]         = useState('');
   const [fieldErrors,   setFieldErrors]   = useState({});
 
+  // Catalog state
+  const [academicYears,  setAcademicYears]  = useState([]);
+  const [filieres,       setFilieres]       = useState([]);
+  const [groups,         setGroups]         = useState([]);
+  const [loadingYears,   setLoadingYears]   = useState(false);
+  const [loadingFil,     setLoadingFil]     = useState(false);
+  const [loadingGroups,  setLoadingGroups]  = useState(false);
+
   const [form, setForm] = useState({
-    academicYear: '', niveau: '', filiere: '', groupe: '',
+    academicYearId: '', filiereId: '', groupeId: '', niveau: '',
     pvFfId: '', module: '', semester: '', session: '',
     physicalLocation: '', notes: '',
   });
@@ -195,6 +189,40 @@ export const AddPV = ({ onNavigate }) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setFieldErrors((prev) => ({ ...prev, [field]: '' }));
   };
+
+  // Load academic years on mount
+  useEffect(() => {
+    setLoadingYears(true);
+    api.get('/training/academic-years')
+      .then(({ data }) => setAcademicYears(data))
+      .catch(() => setAcademicYears([]))
+      .finally(() => setLoadingYears(false));
+  }, []);
+
+  // Load filières when year changes
+  useEffect(() => {
+    if (!form.academicYearId) { setFilieres([]); setGroups([]); return; }
+    setLoadingFil(true);
+    setFilieres([]); setGroups([]);
+    setForm((p) => ({ ...p, filiereId: '', groupeId: '', niveau: '' }));
+    api.get('/training/filieres', { params: { academic_year_id: form.academicYearId } })
+      .then(({ data }) => setFilieres(data))
+      .catch(() => setFilieres([]))
+      .finally(() => setLoadingFil(false));
+  }, [form.academicYearId]);
+
+  // Load groups + auto-fill niveau when filière changes
+  useEffect(() => {
+    if (!form.filiereId) { setGroups([]); return; }
+    const sel = filieres.find((f) => String(f.id) === String(form.filiereId));
+    setForm((p) => ({ ...p, niveau: sel?.level?.name ?? sel?.level?.code ?? '', groupeId: '' }));
+    setLoadingGroups(true);
+    setGroups([]);
+    api.get('/training/groups', { params: { academic_year_id: form.academicYearId, filiere_id: form.filiereId } })
+      .then(({ data }) => setGroups(data))
+      .catch(() => setGroups([]))
+      .finally(() => setLoadingGroups(false));
+  }, [form.filiereId]);
 
   // Fetch PV-FF list when switching to CC or EFM
   useEffect(() => {
@@ -232,7 +260,12 @@ export const AddPV = ({ onNavigate }) => {
   // Build payload based on type
   const buildPayload = () => {
     const base = { type: pvType, physical_location: form.physicalLocation || null, notes: form.notes || null };
-    if (pvType === 'PV_FF')  return { ...base, academic_year: form.academicYear, niveau: form.niveau, filiere: form.filiere, groupe: form.groupe };
+    if (pvType === 'PV_FF') {
+      const year    = academicYears.find((y) => String(y.id) === String(form.academicYearId));
+      const filiere = filieres.find((f) => String(f.id) === String(form.filiereId));
+      const groupe  = groups.find((g) => String(g.id) === String(form.groupeId));
+      return { ...base, academic_year: year?.label ?? '', niveau: form.niveau, filiere: filiere?.name ?? '', groupe: groupe?.code ?? '' };
+    }
     if (pvType === 'PV_CC')  return { ...base, pv_ff_id: form.pvFfId, module: form.module, semester: form.semester };
     if (pvType === 'PV_EFM') return { ...base, pv_ff_id: form.pvFfId, module: form.module, session: form.session };
     return base;
@@ -344,15 +377,17 @@ export const AddPV = ({ onNavigate }) => {
           </div>
 
           {/* Field-level errors summary */}
-          {Object.keys(fieldErrors).length > 0 && (
+          {Object.values(fieldErrors).some((v) => v) && (
             <ul className="text-xs text-red-600 font-semibold space-y-1 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              {Object.entries(fieldErrors).map(([k, msgs]) => (
-                <li key={k}>• {Array.isArray(msgs) ? msgs[0] : msgs}</li>
-              ))}
+              {Object.entries(fieldErrors)
+                .filter(([, msgs]) => msgs)
+                .map(([k, msgs]) => (
+                  <li key={k}>• {Array.isArray(msgs) ? msgs[0] : msgs}</li>
+                ))}
             </ul>
           )}
 
-          {pvType === 'PV_FF'  && <FormPvFF  form={form} onChange={handleChange} />}
+          {pvType === 'PV_FF'  && <FormPvFF  form={form} onChange={handleChange} academicYears={academicYears} filieres={filieres} groups={groups} loadingYears={loadingYears} loadingFil={loadingFil} loadingGroups={loadingGroups} />}
           {pvType === 'PV_CC'  && <FormPvCC  form={form} onChange={handleChange} pvFfList={pvFfList} pvFfLoading={pvFfLoading} />}
           {pvType === 'PV_EFM' && <FormPvEFM form={form} onChange={handleChange} pvFfList={pvFfList} pvFfLoading={pvFfLoading} />}
         </section>
