@@ -90,15 +90,18 @@ const StatusTimeline = ({ currentStatus }) => {
 
 
 // ── Main Component ────────────────────────────────────────────────
-export const PvDetail = ({ pvId, onBack, onViewPv }) => {
+export const PvDetail = ({ pvId, onBack, onViewPv, user }) => {
   const [document, setDocument] = useState(null);
   const [files, setFiles] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
+  
+  // Pagination for history
+  const [historyPage, setHistoryPage] = useState(1);
+  const HISTORY_PER_PAGE = 5;
   const [uploadErr, setUploadErr] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -385,7 +388,7 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
               <div className="relative">
                 <div className="absolute left-4 top-0 bottom-0 w-px bg-outline-variant/30" />
                 <div className="space-y-6">
-                  {history.map((entry) => (
+                  {history.slice((historyPage - 1) * HISTORY_PER_PAGE, historyPage * HISTORY_PER_PAGE).map((entry) => (
                     <div key={entry.id} className="flex gap-4 relative">
                       <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center flex-shrink-0 relative z-10">
                         <Clock size={14} className="text-secondary" />
@@ -400,41 +403,65 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
                     </div>
                   ))}
                 </div>
+                {/* Pagination Controls */}
+                {history.length > HISTORY_PER_PAGE && (
+                  <div className="flex items-center justify-between pt-6 border-t border-outline-variant/30 mt-6 relative z-10 bg-white">
+                    <button
+                      onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                      disabled={historyPage === 1}
+                      className="px-3 py-1.5 text-xs font-bold text-secondary border border-outline-variant rounded-lg hover:bg-surface-container-low disabled:opacity-30 transition-all"
+                    >
+                      Précédent
+                    </button>
+                    <span className="text-[10px] font-black text-secondary tracking-widest">
+                      {historyPage} / {Math.ceil(history.length / HISTORY_PER_PAGE)}
+                    </span>
+                    <button
+                      onClick={() => setHistoryPage(p => Math.min(Math.ceil(history.length / HISTORY_PER_PAGE), p + 1))}
+                      disabled={historyPage === Math.ceil(history.length / HISTORY_PER_PAGE)}
+                      className="px-3 py-1.5 text-xs font-bold text-secondary border border-outline-variant rounded-lg hover:bg-surface-container-low disabled:opacity-30 transition-all"
+                    >
+                      Suivant
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Danger zone */}
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 space-y-3">
-            <div className="flex items-center gap-2 text-red-700">
-              <AlertTriangle size={16} />
-              <h3 className="text-xs font-black uppercase tracking-widest">Zone de danger</h3>
-            </div>
-            <p className="text-xs font-medium text-red-600 leading-relaxed">La suppression d'un document est irréversible.</p>
-            {!deleteConfirm ? (
-              <button onClick={() => setDeleteConfirm(true)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 border border-red-300 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
-                <Trash2 size={14} /> Supprimer ce PV
-              </button>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-xs font-black text-red-700 text-center">Confirmer la suppression ?</p>
-                <div className="flex gap-2">
-                  <button onClick={() => setDeleteConfirm(false)}
-                    className="flex-1 py-2 border border-red-200 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-50 transition-all">
-                    Annuler
-                  </button>
-                  <button onClick={handleDelete} disabled={deleting}
-                    className="flex-1 py-2 bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-700 transition-all disabled:opacity-60 flex items-center justify-center gap-1">
-                    {deleting
-                      ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                      : <Trash2 size={13} />}
-                    Supprimer
-                  </button>
-                </div>
+          {user?.role === 'admin' && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 space-y-3 mt-8">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertTriangle size={16} />
+                <h3 className="text-xs font-black uppercase tracking-widest">Zone de danger</h3>
               </div>
-            )}
-          </div>
+              <p className="text-xs font-medium text-red-600 leading-relaxed">La suppression d'un document est irréversible.</p>
+              {!deleteConfirm ? (
+                <button onClick={() => setDeleteConfirm(true)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 border border-red-300 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
+                  <Trash2 size={14} /> Supprimer ce PV
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs font-black text-red-700 text-center">Confirmer la suppression ?</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => setDeleteConfirm(false)}
+                      className="flex-1 py-2 border border-red-200 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-50 transition-all">
+                      Annuler
+                    </button>
+                    <button onClick={handleDelete} disabled={deleting}
+                      className="flex-1 py-2 bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-700 transition-all disabled:opacity-60 flex items-center justify-center gap-1">
+                      {deleting
+                        ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
+                        : <Trash2 size={14} />}
+                      Confirmer
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

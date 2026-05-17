@@ -117,7 +117,7 @@ export default function App() {
       case 'training':  return <TrainingImport onNavigate={setActivePage} user={user} />;
       case 'search':    return <AdvancedSearch onViewPv={openPvDetail} />;
       case 'activity':  return <ActivityLog />;
-      case 'pv-detail': return <PvDetail pvId={selectedPvId} onBack={closePvDetail} onViewPv={openPvDetail} />;
+      case 'pv-detail': return <PvDetail pvId={selectedPvId} onBack={closePvDetail} onViewPv={openPvDetail} user={user} />;
       case 'users':     return <UserManagement />;
       case 'settings':  return <Settings />;
       default:          return <Dashboard />;

@@ -48,9 +48,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('pv-documents',              [PvDocumentController::class, 'index']);
     Route::get('pv-documents/{pvDocument}', [PvDocumentController::class, 'show']);
 
-    // Create/Update: admin + gestionnaire + archiviste
-    Route::middleware('role:admin,gestionnaire,archiviste')->group(function () {
+    // Create: admin + gestionnaire
+    Route::middleware('role:admin,gestionnaire')->group(function () {
         Route::post('pv-documents',                      [PvDocumentController::class, 'store']);
+    });
+
+    // Update: admin + gestionnaire + archiviste
+    Route::middleware('role:admin,gestionnaire,archiviste')->group(function () {
         Route::put('pv-documents/{pvDocument}',          [PvDocumentController::class, 'update']);
         Route::patch('pv-documents/{pvDocument}',        [PvDocumentController::class, 'update']);
         Route::patch('pv-documents/{pvDocument}/status', [PvDocumentController::class, 'updateStatus']);
@@ -89,8 +93,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('training/creneaux',       [TrainingCatalogController::class, 'creneaux']);
     Route::get('training/groups',         [TrainingCatalogController::class, 'groups']);
 
-    // ── Training write — admin only ────────────────────────────────
-    Route::middleware('role:admin')->group(function () {
+    // ── Training write — admin & gestionnaire ──────────────────────
+    Route::middleware('role:admin,gestionnaire')->group(function () {
         Route::post('training/academic-years', [TrainingCatalogController::class, 'store']);
         Route::post('training/import',         [TrainingImportController::class, 'store']);
     });

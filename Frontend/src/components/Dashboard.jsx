@@ -80,6 +80,10 @@ export const Dashboard = ({ onNavigate, user }) => {
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Pagination state for recent activities
+  const [recentPage, setRecentPage] = useState(1);
+  const RECENT_PER_PAGE = 5;
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -107,7 +111,7 @@ export const Dashboard = ({ onNavigate, user }) => {
       : '0%'
     : null;
 
-  const canAddPv = ['admin', 'gestionnaire', 'archiviste'].includes(user?.role);
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -119,15 +123,6 @@ export const Dashboard = ({ onNavigate, user }) => {
           <p className="text-secondary mt-1 text-sm">Résumé analytique et statistiques de gestion des documents.</p>
         </div>
         <div className="flex gap-3">
-          {canAddPv && (
-            <button
-              onClick={() => onNavigate?.('add')}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-primary-container transition-colors shadow-lg shadow-primary/10"
-            >
-              <Plus size={16} />
-              Nouveau PV
-            </button>
-          )}
         </div>
       </div>
 
@@ -207,31 +202,55 @@ export const Dashboard = ({ onNavigate, user }) => {
                 <p className="text-xs font-bold uppercase tracking-widest">Aucune activité récente</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {recent.map((log, idx) => {
-                  const mapped = ACTION_MAP[log.action] ?? { label: log.action, icon: FileText, color: 'bg-outline' };
-                  const Icon = mapped.icon;
-                  return (
-                    <motion.div
-                      key={log.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.04 }}
-                      className="flex items-center gap-4 p-3 hover:bg-surface-container-low rounded-xl transition-colors"
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  {recent.slice((recentPage - 1) * RECENT_PER_PAGE, recentPage * RECENT_PER_PAGE).map((log, idx) => {
+                    const mapped = ACTION_MAP[log.action] ?? { label: log.action, icon: FileText, color: 'bg-outline' };
+                    const Icon = mapped.icon;
+                    return (
+                      <motion.div
+                        key={log.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.04 }}
+                        className="flex items-center gap-4 p-3 hover:bg-surface-container-low rounded-xl transition-colors"
+                      >
+                        <div className={`w-8 h-8 rounded-full ${mapped.color} flex items-center justify-center text-white flex-shrink-0`}>
+                          <Icon size={15} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-primary truncate">{log.target_label ?? '—'}</p>
+                          <p className="text-xs text-secondary">{log.user?.name ?? '—'} · {fmtDate(log.created_at)}</p>
+                        </div>
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full text-white ${mapped.color} flex-shrink-0`}>
+                          {mapped.label}
+                        </span>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+                {/* Pagination Controls */}
+                {recent.length > RECENT_PER_PAGE && (
+                  <div className="flex items-center justify-between pt-4 border-t border-outline-variant/30">
+                    <button
+                      onClick={() => setRecentPage(p => Math.max(1, p - 1))}
+                      disabled={recentPage === 1}
+                      className="px-3 py-1.5 text-xs font-bold text-secondary border border-outline-variant rounded-lg hover:bg-surface-container-low disabled:opacity-30 transition-all"
                     >
-                      <div className={`w-8 h-8 rounded-full ${mapped.color} flex items-center justify-center text-white flex-shrink-0`}>
-                        <Icon size={15} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-primary truncate">{log.target_label ?? '—'}</p>
-                        <p className="text-xs text-secondary">{log.user?.name ?? '—'} · {fmtDate(log.created_at)}</p>
-                      </div>
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full text-white ${mapped.color} flex-shrink-0`}>
-                        {mapped.label}
-                      </span>
-                    </motion.div>
-                  );
-                })}
+                      Précédent
+                    </button>
+                    <span className="text-[10px] font-black text-secondary tracking-widest">
+                      {recentPage} / {Math.ceil(recent.length / RECENT_PER_PAGE)}
+                    </span>
+                    <button
+                      onClick={() => setRecentPage(p => Math.min(Math.ceil(recent.length / RECENT_PER_PAGE), p + 1))}
+                      disabled={recentPage === Math.ceil(recent.length / RECENT_PER_PAGE)}
+                      className="px-3 py-1.5 text-xs font-bold text-secondary border border-outline-variant rounded-lg hover:bg-surface-container-low disabled:opacity-30 transition-all"
+                    >
+                      Suivant
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -282,25 +301,6 @@ export const Dashboard = ({ onNavigate, user }) => {
             )}
           </div>
 
-          {/* Quick nav */}
-          <div className="bg-blue-50 border border-blue-200 p-5 rounded-xl space-y-3">
-            <p className="text-blue-700 text-xs font-black uppercase tracking-widest">Accès rapide</p>
-            <div className="space-y-2">
-              {[
-                { label: 'Tous les documents', page: 'documents' },
-                { label: 'Recherche avancée', page: 'search' },
-                ...(canAddPv ? [{ label: 'Ajouter un PV', page: 'add' }] : []),
-              ].map(({ label, page }) => (
-                <button
-                  key={page}
-                  onClick={() => onNavigate?.(page)}
-                  className="w-full text-left text-xs font-black text-blue-700 hover:text-blue-900 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors uppercase tracking-widest"
-                >
-                  → {label}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>
