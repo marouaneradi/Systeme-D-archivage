@@ -42,6 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Search + filters handled via index() params:
     // GET /api/pv-documents?search=...&type=...&status=...&niveau=...&filiere=...&groupe=...&academic_year=...
 
+    Route::get('pv-types/available', [PvDocumentController::class, 'availableTypes']);
+
     // Read: all authenticated roles
     Route::get('pv-documents',              [PvDocumentController::class, 'index']);
     Route::get('pv-documents/{pvDocument}', [PvDocumentController::class, 'show']);

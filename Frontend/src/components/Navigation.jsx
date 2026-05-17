@@ -1,53 +1,55 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ofpptMiniLogo from '../assets/OFPPT-Mini-Logo.png';
+import navback from '../assets/navback.png';
 import {
   BarChart3, FileText, PlusCircle, Search,
   History, Settings, Menu, Bell, LogOut, User,
   AlertTriangle, CheckCircle2, Clock, Info, X,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../services/api';
 
 // ── Role display helpers ──────────────────────────────────────────
 const ROLE_STYLES = {
-  admin:        'bg-purple-100 text-purple-700',
+  admin: 'bg-purple-100 text-purple-700',
   gestionnaire: 'bg-blue-100 text-blue-700',
-  archiviste:   'bg-green-100 text-green-700',
-  consultant:   'bg-amber-100 text-amber-700',
+  archiviste: 'bg-green-100 text-green-700',
+  consultant: 'bg-amber-100 text-amber-700',
 };
 
 const ROLE_LABELS = {
-  admin:        'Administrateur',
+  admin: 'Administrateur',
   gestionnaire: 'Gestionnaire',
-  archiviste:   'Archiviste',
-  consultant:   'Consultant',
+  archiviste: 'Archiviste',
+  consultant: 'Consultant',
 };
 
 // ── Notification icon + color mapping ────────────────────────────
 const ALERT_CONFIG = {
-  created:        { icon: FileText,      color: 'text-blue-500',   bg: 'bg-blue-50'   },
-  status_changed: { icon: CheckCircle2,  color: 'text-green-500',  bg: 'bg-green-50'  },
-  missing:        { icon: AlertTriangle, color: 'text-amber-500',  bg: 'bg-amber-50'  },
-  reminder:       { icon: Clock,         color: 'text-purple-500', bg: 'bg-purple-50' },
-  info:           { icon: Info,          color: 'text-slate-400',  bg: 'bg-slate-50'  },
+  created: { icon: FileText, color: 'text-blue-500', bg: 'bg-blue-50' },
+  status_changed: { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
+  missing: { icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-50' },
+  reminder: { icon: Clock, color: 'text-purple-500', bg: 'bg-purple-50' },
+  info: { icon: Info, color: 'text-slate-400', bg: 'bg-slate-50' },
 };
 
 const fmtRelative = (iso) => {
   if (!iso) return '';
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
-  if (diff < 60)    return "À l'instant";
-  if (diff < 3600)  return `Il y a ${Math.floor(diff / 60)} min`;
+  if (diff < 60) return "À l'instant";
+  if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
   if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`;
   return `Il y a ${Math.floor(diff / 86400)} j`;
 };
 
 // ── NotificationBell ──────────────────────────────────────────────
 const NotificationBell = ({ onNavigate }) => {
-  const [open, setOpen]          = useState(false);
+  const [open, setOpen] = useState(false);
   const [notifications, setNotifs] = useState([]);
-  const [unreadCount, setUnread]  = useState(0);
-  const [loading, setLoading]     = useState(false);
-  const dropdownRef               = useRef(null);
+  const [unreadCount, setUnread] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const dropdownRef = useRef(null);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -72,7 +74,7 @@ const NotificationBell = ({ onNavigate }) => {
 
   const handleMarkRead = async (n) => {
     if (n.type === 'notification' && !n.read) {
-      await api.patch(`/notifications/${n.id}/read`).catch(() => {});
+      await api.patch(`/notifications/${n.id}/read`).catch(() => { });
       setNotifs((prev) => prev.map((x) => x.id === n.id ? { ...x, read: true } : x));
       setUnread((c) => Math.max(0, c - 1));
     }
@@ -81,7 +83,7 @@ const NotificationBell = ({ onNavigate }) => {
   };
 
   const handleMarkAllRead = async () => {
-    await api.patch('/notifications/read-all').catch(() => {});
+    await api.patch('/notifications/read-all').catch(() => { });
     setNotifs((prev) => prev.map((x) => ({ ...x, read: true })));
     setUnread(0);
   };
@@ -174,20 +176,20 @@ const NotificationBell = ({ onNavigate }) => {
 
 // ── Sidebar menu items ────────────────────────────────────────────
 const ALL_MENU_ITEMS = [
-  { id: 'dashboard', label: 'Tableau de bord',  icon: BarChart3  },
-  { id: 'documents', label: 'Documents PV',      icon: FileText   },
-  { id: 'add',       label: 'Nouvel Ajout',      icon: PlusCircle, allowedRoles: ['admin', 'gestionnaire', 'archiviste'] },
-  { id: 'training',  label: 'Nouvelle Promotion', icon: PlusCircle, allowedRoles: ['admin', 'gestionnaire'] },
-  { id: 'search',    label: 'Recherche Avancée', icon: Search     },
-  { id: 'activity',  label: "Journal d'activité",icon: History,    allowedRoles: ['admin', 'gestionnaire'] },
-  { id: 'users',     label: 'Utilisateurs',      icon: User,       allowedRoles: ['admin'] },
-  { id: 'settings',  label: 'Paramètres',        icon: Settings,   allowedRoles: ['admin'] },
+  { id: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
+  { id: 'documents', label: 'Documents PV', icon: FileText },
+  { id: 'add', label: 'Nouvel Ajout', icon: PlusCircle, allowedRoles: ['admin', 'gestionnaire', 'archiviste'] },
+  { id: 'training', label: 'Nouvelle Promotion', icon: PlusCircle, allowedRoles: ['admin', 'gestionnaire'] },
+  { id: 'search', label: 'Recherche Avancée', icon: Search },
+  { id: 'activity', label: "Journal d'activité", icon: History, allowedRoles: ['admin', 'gestionnaire'] },
+  { id: 'users', label: 'Utilisateurs', icon: User, allowedRoles: ['admin'] },
+  { id: 'settings', label: 'Paramètres', icon: Settings, allowedRoles: ['admin'] },
 ];
 
 // ── Sidebar ───────────────────────────────────────────────────────
 // `open`    — controlled by parent (mobile drawer state)
 // `onClose` — called when drawer should close (mobile)
-export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClose }) => {
+export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClose, isDesktopOpen, onToggleDesktop }) => {
   const role = user?.role;
 
   const menuItems = ALL_MENU_ITEMS.filter(
@@ -205,20 +207,23 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
 
   // Sidebar inner content (shared between desktop fixed & mobile drawer)
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div 
+      className="flex flex-col h-full text-slate-900 bg-cover bg-center"
+      style={{ backgroundImage: `url(${navback})` }}
+    >
       {/* Logo + close button (mobile) */}
-      <div className="px-6 mb-8 flex items-center justify-between gap-3 pt-2">
+      <div className="px-6 mb-8 flex items-center justify-between gap-3 pt-4">
         <div className="flex items-center gap-3">
-          <img src={ofpptMiniLogo} alt="OFPPT Logo" className="w-10 h-10 object-contain" />
+          <img src={ofpptMiniLogo} alt="OFPPT Logo" className="w-10 h-10 object-contain drop-shadow-sm" />
           <div>
-            <p className="text-lg font-bold text-primary leading-none">Système PV</p>
-            <p className="text-[10px] text-secondary font-medium mt-1 uppercase tracking-wider">Archivage Institutionnel</p>
+            <p className="text-lg font-black text-slate-900 leading-none tracking-tight">Système PV</p>
+            <p className="text-[10px] text-slate-500 font-bold mt-1 uppercase tracking-widest">Archivage</p>
           </div>
         </div>
         {/* Close button — only visible on mobile */}
         <button
           onClick={onClose}
-          className="lg:hidden p-1.5 rounded-full hover:bg-surface-container-high text-secondary transition-colors"
+          className="lg:hidden p-1.5 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
           aria-label="Fermer le menu"
         >
           <X size={18} />
@@ -226,63 +231,51 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = activePage === item.id;
           return (
             <button
               key={item.id}
               onClick={() => handleNav(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 relative group ${
-                isActive
-                  ? 'bg-surface-container-high text-primary'
-                  : 'text-secondary hover:bg-surface-container-low hover:text-primary'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 relative group overflow-hidden ${isActive
+                  ? 'bg-blue-50/80 text-blue-700 shadow-[0_2px_10px_-4px_rgba(37,99,235,0.3)]'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
             >
               {isActive && (
-                <motion.div layoutId="activeBar" className="absolute left-0 w-1 h-6 bg-primary rounded-r-full" />
+                <motion.div layoutId="activeBar" className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-full" />
               )}
-              <item.icon size={20} className={isActive ? 'text-primary' : 'text-secondary group-hover:text-primary'} />
-              <span>{item.label}</span>
+              <item.icon size={20} className={`transition-colors duration-300 z-10 ${isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+              <span className="z-10">{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      {/* User info + logout */}
-      <div className="mt-auto px-4 pt-4 border-t border-outline-variant/30 space-y-3">
-        {user?.role && (
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${ROLE_STYLES[role] ?? 'bg-surface-container text-secondary'}`}>
-            {ROLE_LABELS[role] ?? role}
-          </span>
-        )}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-sm font-black flex-shrink-0">
-            {initials}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-primary truncate">{user?.name ?? 'Utilisateur'}</p>
-            <p className="text-[10px] text-secondary truncate">{user?.email ?? ''}</p>
-          </div>
-          <button
-            id="sidebar-logout-btn"
-            onClick={onLogout}
-            title="Se déconnecter"
-            className="p-2 text-secondary hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-          >
-            <LogOut size={18} />
-          </button>
-        </div>
-      </div>
+      {/* Empty space at bottom to push nav up if needed, or just let nav expand */}
     </div>
   );
 
   return (
     <>
       {/* ── Desktop: fixed sidebar (lg+) ─────────────────────────── */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[260px] border-r border-outline-variant bg-white flex-col py-4 z-50">
+      <aside className={`hidden lg:flex fixed left-0 top-0 h-screen w-[260px] border-r border-slate-200/60 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.05)] flex-col z-50 transition-transform duration-300 ${isDesktopOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {sidebarContent}
       </aside>
+
+      {/* ── Desktop Toggle Arrow ─────────────────────────────────── */}
+      <button
+        onClick={onToggleDesktop}
+        className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] w-7 h-7 bg-white border border-slate-200/60 items-center justify-center text-slate-400 shadow-md hover:text-slate-800 transition-all duration-300 ${
+          isDesktopOpen 
+            ? 'left-[246px] rounded-full hover:bg-slate-50' 
+            : 'left-0 rounded-r-full border-l-0 hover:w-8 hover:bg-blue-50 hover:text-blue-600'
+        }`}
+        aria-label="Basculer le menu"
+      >
+        {isDesktopOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+      </button>
 
       {/* ── Mobile/Tablet: slide-in drawer (<lg) ─────────────────── */}
       <AnimatePresence>
@@ -305,7 +298,7 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-              className="lg:hidden fixed left-0 top-0 h-screen w-[280px] bg-white border-r border-outline-variant flex flex-col py-4 z-50 shadow-2xl"
+              className="lg:hidden fixed left-0 top-0 h-screen w-[280px] border-r border-slate-200/60 shadow-2xl flex flex-col z-50"
             >
               {sidebarContent}
             </motion.aside>
@@ -317,42 +310,51 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
 };
 
 // ── TopBar ────────────────────────────────────────────────────────
-export const TopBar = ({ activeLabel, user, onLogout, onNavigate, onMenuToggle }) => {
+export const TopBar = ({ activePage, activeLabel, user, onLogout, onNavigate, onMenuToggle }) => {
   const initials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
 
+  const activeItem = ALL_MENU_ITEMS.find(item => item.id === activePage) || {};
+
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-outline-variant bg-white/90 backdrop-blur-md flex justify-between items-center px-4 sm:px-8 h-16">
+    <header className="sticky top-0 z-30 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/60 flex justify-between items-center px-4 sm:px-8 h-16 transition-all">
       {/* Left: hamburger (mobile) + page label */}
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden p-2 hover:bg-surface-container-high rounded-full transition-colors text-primary"
+          className="lg:hidden p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-800 focus:outline-none"
           aria-label="Ouvrir le menu"
         >
           <Menu size={20} />
         </button>
-        <span className="text-sm font-semibold text-secondary truncate max-w-[160px] sm:max-w-none">{activeLabel}</span>
+        {activeItem.icon && (
+          <div className="hidden sm:flex w-8 h-8 rounded-lg bg-blue-50 items-center justify-center text-blue-600">
+            <activeItem.icon size={16} />
+          </div>
+        )}
+        <span className="text-sm font-black text-slate-800 truncate max-w-[160px] sm:max-w-none tracking-tight">
+          {activeLabel || activeItem.label || activePage}
+        </span>
       </div>
 
       {/* Right: notifications + user */}
       <div className="flex items-center gap-2 sm:gap-3">
         <NotificationBell onNavigate={onNavigate} />
 
-        <div className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-outline-variant/30">
-          <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-black flex-shrink-0">
+        <div className="flex items-center gap-3 pl-3 sm:pl-4 border-l border-slate-200/80">
+          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-black flex-shrink-0 shadow-md shadow-blue-600/20">
             {initials}
           </div>
           <div className="hidden md:block">
-            <p className="text-xs font-bold text-primary leading-none">{user?.name ?? 'Utilisateur'}</p>
-            <p className="text-[10px] text-green-600 font-bold uppercase tracking-tighter">En ligne</p>
+            <p className="text-xs font-black text-slate-900 leading-none">{user?.name ?? 'Utilisateur'}</p>
+            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mt-0.5">En ligne</p>
           </div>
           <button
             id="topbar-logout-btn"
             onClick={onLogout}
             title="Se déconnecter"
-            className="ml-1 p-1.5 text-secondary hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+            className="ml-1 p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
           >
             <LogOut size={16} />
           </button>

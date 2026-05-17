@@ -9,13 +9,13 @@ import api from '../services/api';
 
 // ── Action map (same as ActivityLog) ─────────────────────────────
 const ACTION_MAP = {
-  CREATE:   { label: 'Ajout',          icon: Plus,        color: 'bg-green-500'  },
-  UPDATE:   { label: 'Modification',   icon: Edit3,       color: 'bg-blue-500'   },
-  DELETE:   { label: 'Suppression',    icon: Trash2,      color: 'bg-red-500'    },
-  VIEW:     { label: 'Consultation',   icon: Eye,         color: 'bg-slate-400'  },
-  UPLOAD:   { label: 'Upload',         icon: Upload,      color: 'bg-violet-500' },
-  VALIDATE: { label: 'Validation',     icon: CheckCircle, color: 'bg-emerald-500'},
-  LOGIN:    { label: 'Connexion',      icon: LogIn,       color: 'bg-primary'    },
+  CREATE: { label: 'Ajout', icon: Plus, color: 'bg-green-500' },
+  UPDATE: { label: 'Modification', icon: Edit3, color: 'bg-blue-500' },
+  DELETE: { label: 'Suppression', icon: Trash2, color: 'bg-red-500' },
+  VIEW: { label: 'Consultation', icon: Eye, color: 'bg-slate-400' },
+  UPLOAD: { label: 'Upload', icon: Upload, color: 'bg-violet-500' },
+  VALIDATE: { label: 'Validation', icon: CheckCircle, color: 'bg-emerald-500' },
+  LOGIN: { label: 'Connexion', icon: LogIn, color: 'bg-primary' },
 };
 
 const fmtDate = (iso) =>
@@ -40,7 +40,7 @@ const StatCard = ({ title, value, sub, icon: Icon, colorClass, loading }) => (
 );
 
 // ── Bar chart ─────────────────────────────────────────────────────
-const MONTHS = ['JAN','FÉV','MAR','AVR','MAI','JUN','JUL','AOÛ','SEP','OCT','NOV','DÉC'];
+const MONTHS = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUN', 'JUL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
 
 const BarChart = ({ data, loading }) => {
   const max = Math.max(...data.map((d) => d.count), 1);
@@ -48,9 +48,9 @@ const BarChart = ({ data, loading }) => {
     <div>
       <div className="h-48 flex items-end gap-2 pb-2">
         {MONTHS.map((m, i) => {
-          const item  = data.find((d) => d.month === i + 1);
+          const item = data.find((d) => d.month === i + 1);
           const count = item?.count ?? 0;
-          const pct   = Math.max((count / max) * 100, 4);
+          const pct = Math.max((count / max) * 100, 4);
           return (
             <div key={m} className="flex-1 flex flex-col items-center gap-1 group relative">
               {count > 0 && (
@@ -75,11 +75,11 @@ const BarChart = ({ data, loading }) => {
 
 // ── Main Component ────────────────────────────────────────────────
 export const Dashboard = ({ onNavigate, user }) => {
-  const [stats,    setStats]    = useState(null);
-  const [chart,    setChart]    = useState([]);
-  const [recent,   setRecent]   = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState('');
+  const [stats, setStats] = useState(null);
+  const [chart, setChart] = useState([]);
+  const [recent, setRecent] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -140,7 +140,7 @@ export const Dashboard = ({ onNavigate, user }) => {
         <StatCard
           title="Total des PV"
           value={stats?.total}
-          sub={`${stats?.by_type?.PV_FF ?? 0} FF · ${stats?.by_type?.PV_CC ?? 0} CC · ${stats?.by_type?.PV_EFM ?? 0} EFM`}
+          sub={`${stats?.by_type?.PV_FF ?? 0} FF · ${stats?.by_type?.PV_PASSAGE ?? 0} Passage · ${stats?.by_type?.PV_INTERMEDIAIRE ?? 0} Inter`}
           icon={FileBox}
           colorClass="bg-blue-50 text-blue-600"
           loading={loading}
@@ -199,7 +199,7 @@ export const Dashboard = ({ onNavigate, user }) => {
 
             {loading ? (
               <div className="space-y-3">
-                {[1,2,3].map((i) => <div key={i} className="h-14 bg-surface-container-low rounded-lg animate-pulse" />)}
+                {[1, 2, 3].map((i) => <div key={i} className="h-14 bg-surface-container-low rounded-lg animate-pulse" />)}
               </div>
             ) : recent.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-secondary gap-2">
@@ -210,7 +210,7 @@ export const Dashboard = ({ onNavigate, user }) => {
               <div className="space-y-2">
                 {recent.map((log, idx) => {
                   const mapped = ACTION_MAP[log.action] ?? { label: log.action, icon: FileText, color: 'bg-outline' };
-                  const Icon   = mapped.icon;
+                  const Icon = mapped.icon;
                   return (
                     <motion.div
                       key={log.id}
@@ -255,18 +255,18 @@ export const Dashboard = ({ onNavigate, user }) => {
             <h3 className="text-sm font-black text-primary uppercase tracking-widest">Par statut</h3>
             {loading ? (
               <div className="space-y-2">
-                {[1,2,3,4,5].map((i) => <div key={i} className="h-6 bg-surface-container-low rounded animate-pulse" />)}
+                {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-6 bg-surface-container-low rounded animate-pulse" />)}
               </div>
             ) : (
               [
-                { key: 'BROUILLON',         label: 'Brouillon',         bar: 'bg-slate-400'  },
-                { key: 'EN_ATTENTE',        label: 'En attente',        bar: 'bg-amber-400'  },
-                { key: 'VALIDE_PAPIER',     label: 'Validé papier',     bar: 'bg-blue-400'   },
+                { key: 'BROUILLON', label: 'Brouillon', bar: 'bg-slate-400' },
+                { key: 'EN_ATTENTE', label: 'En attente', bar: 'bg-amber-400' },
+                { key: 'VALIDE_PAPIER', label: 'Validé papier', bar: 'bg-blue-400' },
                 { key: 'ARCHIVE_NUMERIQUE', label: 'Archivé numérique', bar: 'bg-violet-500' },
-                { key: 'ARCHIVE_COMPLET',   label: 'Archive complète',  bar: 'bg-green-500'  },
+                { key: 'ARCHIVE_COMPLET', label: 'Archive complète', bar: 'bg-green-500' },
               ].map(({ key, label, bar }) => {
                 const count = stats?.by_status?.[key] ?? 0;
-                const pct   = stats?.total > 0 ? Math.round(count / stats.total * 100) : 0;
+                const pct = stats?.total > 0 ? Math.round(count / stats.total * 100) : 0;
                 return (
                   <div key={key} className="space-y-1">
                     <div className="flex justify-between text-xs font-bold">
@@ -288,7 +288,7 @@ export const Dashboard = ({ onNavigate, user }) => {
             <div className="space-y-2">
               {[
                 { label: 'Tous les documents', page: 'documents' },
-                { label: 'Recherche avancée',  page: 'search'    },
+                { label: 'Recherche avancée', page: 'search' },
                 ...(canAddPv ? [{ label: 'Ajouter un PV', page: 'add' }] : []),
               ].map(({ label, page }) => (
                 <button

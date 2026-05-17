@@ -20,35 +20,32 @@ const ACADEMIC_YEARS = Array.from({ length: 10 }, (_, i) => {
 });
 
 const STATUS_OPTIONS = [
-  { value: 'BROUILLON',         label: 'Brouillon',         color: 'bg-slate-400'  },
-  { value: 'EN_ATTENTE',        label: 'En attente',        color: 'bg-amber-400'  },
-  { value: 'VALIDE_PAPIER',     label: 'Validé papier',     color: 'bg-blue-400'   },
+  { value: 'BROUILLON', label: 'Brouillon', color: 'bg-slate-400' },
+  { value: 'EN_ATTENTE', label: 'En attente', color: 'bg-amber-400' },
+  { value: 'VALIDE_PAPIER', label: 'Validé papier', color: 'bg-blue-400' },
   { value: 'ARCHIVE_NUMERIQUE', label: 'Archivé numérique', color: 'bg-violet-500' },
-  { value: 'ARCHIVE_COMPLET',   label: 'Archive complète',  color: 'bg-green-500'  },
+  { value: 'ARCHIVE_COMPLET', label: 'Archive complète', color: 'bg-green-500' },
 ];
 
 const TYPE_OPTIONS = [
-  { value: 'PV_FF',  label: 'PV-FF — Fin de Formation'      },
-  { value: 'PV_CC',  label: 'PV-CC — Contrôles Continus'    },
-  { value: 'PV_EFM', label: 'PV-EFM — Examen Fin de Module' },
+  { value: 'PV_FF', label: 'PV-FF — Fin de Formation' },
+  { value: 'PV_PASSAGE', label: 'PV-Passage — Passage' },
+  { value: 'PV_INTERMEDIAIRE', label: 'PV-Intermédiaire — Bilan' },
 ];
 
 const STATUS_BADGE = {
-  BROUILLON:         'bg-slate-100 text-slate-600',
-  EN_ATTENTE:        'bg-amber-50 text-amber-700',
-  VALIDE_PAPIER:     'bg-blue-50 text-blue-700',
+  BROUILLON: 'bg-slate-100 text-slate-600',
+  EN_ATTENTE: 'bg-amber-50 text-amber-700',
+  VALIDE_PAPIER: 'bg-blue-50 text-blue-700',
   ARCHIVE_NUMERIQUE: 'bg-violet-50 text-violet-700',
-  ARCHIVE_COMPLET:   'bg-green-50 text-green-700',
+  ARCHIVE_COMPLET: 'bg-green-50 text-green-700',
 };
 
 const fmtDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const docTitle = (doc) => {
-  if (doc.type === 'PV_FF')  return `${doc.filiere ?? '—'} · G${doc.groupe ?? ''}`;
-  if (doc.type === 'PV_CC')  return `${doc.module ?? '—'} · ${doc.semester ?? ''}`;
-  if (doc.type === 'PV_EFM') return `${doc.module ?? '—'} · ${doc.session ?? ''}`;
-  return `PV #${doc.id}`;
+  return `${doc.filiere ?? '—'} · ${doc.niveau ?? ''} · G${doc.groupe ?? ''}`;
 };
 
 const statusLabel = (val) =>
@@ -58,7 +55,7 @@ const statusLabel = (val) =>
 const FieldLabel = ({ children }) => (
   <label className="text-[10px] font-black text-secondary tracking-widest px-1 uppercase">{children}</label>
 );
-const inputCls  = 'w-full py-3 border border-outline-variant/50 rounded-xl bg-surface-container-low/30 text-sm font-bold focus:ring-2 focus:ring-primary outline-none px-3';
+const inputCls = 'w-full py-3 border border-outline-variant/50 rounded-xl bg-surface-container-low/30 text-sm font-bold focus:ring-2 focus:ring-primary outline-none px-3';
 const selectCls = `${inputCls} appearance-none cursor-pointer`;
 
 // ── Export helpers ────────────────────────────────────────────────
@@ -73,17 +70,17 @@ const fetchAllForExport = async (params) => {
 
 // Map doc to flat row
 const toRow = (doc) => ({
-  ID:         `#${doc.id}`,
-  Type:       doc.type?.replace('_', '-') ?? '—',
-  Document:   docTitle(doc),
-  Filière:    doc.filiere ?? doc.module ?? '—',
-  Niveau:     doc.niveau ?? '—',
-  Groupe:     doc.groupe ?? '—',
-  Année:      doc.academic_year ?? '—',
-  Statut:     statusLabel(doc.status),
-  Fichiers:   doc.files_count ?? 0,
+  ID: `#${doc.id}`,
+  Type: doc.type?.replace('_', '-') ?? '—',
+  Document: docTitle(doc),
+  Filière: doc.filiere ?? doc.module ?? '—',
+  Niveau: doc.niveau ?? '—',
+  Groupe: doc.groupe ?? '—',
+  Année: doc.academic_year ?? '—',
+  Statut: statusLabel(doc.status),
+  Fichiers: doc.files_count ?? 0,
   'Créé par': doc.creator?.name ?? '—',
-  'Créé le':  fmtDate(doc.created_at),
+  'Créé le': fmtDate(doc.created_at),
 });
 
 // Export Excel
@@ -118,12 +115,12 @@ const exportPDF = (rows, filename, filters) => {
 
   // Active filters summary
   const filterParts = [];
-  if (filters.search)       filterParts.push(`Recherche: "${filters.search}"`);
-  if (filters.type)         filterParts.push(`Type: ${filters.type.replace('_', '-')}`);
-  if (filters.niveau)       filterParts.push(`Niveau: ${filters.niveau}`);
-  if (filters.filiere)      filterParts.push(`Filière: ${filters.filiere}`);
+  if (filters.search) filterParts.push(`Recherche: "${filters.search}"`);
+  if (filters.type) filterParts.push(`Type: ${filters.type.replace('_', '-')}`);
+  if (filters.niveau) filterParts.push(`Niveau: ${filters.niveau}`);
+  if (filters.filiere) filterParts.push(`Filière: ${filters.filiere}`);
   if (filters.academic_year) filterParts.push(`Année: ${filters.academic_year}`);
-  if (filterParts.length)   doc.text(`Filtres: ${filterParts.join(' · ')}`, 14, 29);
+  if (filterParts.length) doc.text(`Filtres: ${filterParts.join(' · ')}`, 14, 29);
 
   doc.setTextColor(0);
 
@@ -180,46 +177,46 @@ const exportPDF = (rows, filename, filters) => {
 
 // ── Main Component ─────────────────────────────────────────────────
 export const AdvancedSearch = ({ onViewPv }) => {
-  const [globalQuery,    setGlobalQuery]    = useState('');
-  const [pvType,         setPvType]         = useState('');
-  const [niveau,         setNiveau]         = useState('');
-  const [filiere,        setFiliere]        = useState('');
-  const [groupe,         setGroupe]         = useState('');
-  const [yearFrom,       setYearFrom]       = useState('');
-  const [yearTo,         setYearTo]         = useState('');
+  const [globalQuery, setGlobalQuery] = useState('');
+  const [pvType, setPvType] = useState('');
+  const [niveau, setNiveau] = useState('');
+  const [filiere, setFiliere] = useState('');
+  const [groupe, setGroupe] = useState('');
+  const [yearFrom, setYearFrom] = useState('');
+  const [yearTo, setYearTo] = useState('');
   const [activeStatuses, setActiveStatuses] = useState(
     Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, true]))
   );
   const [sortBy, setSortBy] = useState('date_desc');
 
-  const [results,       setResults]       = useState([]);
-  const [totalCount,    setTotalCount]    = useState(0);
-  const [totalPages,    setTotalPages]    = useState(1);
-  const [currentPage,   setCurrentPage]   = useState(1);
-  const [loading,       setLoading]       = useState(false);
-  const [error,         setError]         = useState('');
-  const [searched,      setSearched]      = useState(false);
+  const [results, setResults] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [searched, setSearched] = useState(false);
   const [archivedTotal, setArchivedTotal] = useState(null);
 
   // Export state
-  const [exportingPdf,   setExportingPdf]   = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
 
   useEffect(() => {
     api.get('/pv-documents', { params: { status: 'ARCHIVE_COMPLET', per_page: 1 } })
       .then(({ data }) => setArchivedTotal(data.total))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const buildParams = useCallback((page = 1) => {
     const params = { page, per_page: 10 };
-    if (globalQuery) params.search        = globalQuery;
-    if (pvType)      params.type          = pvType;
-    if (niveau)      params.niveau        = niveau;
-    if (filiere)     params.filiere       = filiere;
-    if (groupe)      params.groupe        = groupe;
-    if (yearFrom)    params.year_from     = yearFrom;
-    if (yearTo)      params.year_to       = yearTo;
+    if (globalQuery) params.search = globalQuery;
+    if (pvType) params.type = pvType;
+    if (niveau) params.niveau = niveau;
+    if (filiere) params.filiere = filiere;
+    if (groupe) params.groupe = groupe;
+    if (yearFrom) params.year_from = yearFrom;
+    if (yearTo) params.year_to = yearTo;
     const selectedStatuses = STATUS_OPTIONS
       .filter((s) => activeStatuses[s.value])
       .map((s) => s.value);
@@ -227,7 +224,7 @@ export const AdvancedSearch = ({ onViewPv }) => {
       params.status = selectedStatuses;
     }
     if (sortBy === 'date_desc') { params.sort = 'created_at'; params.direction = 'desc'; }
-    if (sortBy === 'date_asc')  { params.sort = 'created_at'; params.direction = 'asc';  }
+    if (sortBy === 'date_asc') { params.sort = 'created_at'; params.direction = 'asc'; }
     return params;
   }, [globalQuery, pvType, niveau, filiere, groupe, yearFrom, yearTo, activeStatuses, sortBy]);
 
@@ -268,7 +265,7 @@ export const AdvancedSearch = ({ onViewPv }) => {
   // ── Export handlers ───────────────────────────────────────────
   const filename = () => {
     const parts = ['PV-Export'];
-    if (pvType)  parts.push(pvType.replace('_', '-'));
+    if (pvType) parts.push(pvType.replace('_', '-'));
     if (yearFrom) parts.push(yearFrom);
     parts.push(new Date().toISOString().slice(0, 10));
     return parts.join('_');
@@ -278,7 +275,7 @@ export const AdvancedSearch = ({ onViewPv }) => {
     setExportingExcel(true);
     setError('');
     try {
-      const all  = await fetchAllForExport(buildParams());
+      const all = await fetchAllForExport(buildParams());
       const rows = all.map(toRow);
       exportExcel(rows, filename());
     } catch {
@@ -292,8 +289,8 @@ export const AdvancedSearch = ({ onViewPv }) => {
     setExportingPdf(true);
     setError('');
     try {
-      const all     = await fetchAllForExport(buildParams());
-      const rows    = all.map(toRow);
+      const all = await fetchAllForExport(buildParams());
+      const rows = all.map(toRow);
       const filters = buildParams();
       exportPDF(rows, filename(), filters);
     } catch {
@@ -494,7 +491,7 @@ export const AdvancedSearch = ({ onViewPv }) => {
                 </thead>
                 <tbody className="divide-y divide-outline-variant/20">
                   {loading ? (
-                    [1,2,3,4].map((i) => (
+                    [1, 2, 3, 4].map((i) => (
                       <tr key={i}><td colSpan={5} className="px-6 py-4">
                         <div className="h-10 bg-surface-container-low rounded-lg animate-pulse" />
                       </td></tr>

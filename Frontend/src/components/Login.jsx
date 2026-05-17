@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { authService } from '../services/api';
 
 export default function Login({ onLogin }) {
-  const [email, setEmail]       = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +26,7 @@ export default function Login({ onLogin }) {
 
       // Persist token and user in localStorage
       localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user',  JSON.stringify(data.user));
+      localStorage.setItem('auth_user', JSON.stringify(data.user));
 
       onLogin(data.user);
     } catch (err) {
@@ -57,7 +57,7 @@ export default function Login({ onLogin }) {
         {/* Logo */}
         <div className="relative z-10 flex items-center gap-3">
           <img
-          src={ofpptMiniLogo}
+            src={ofpptMiniLogo}
             alt="OFPPT Logo"
             className="w-12 h-12 object-contain"
           />
@@ -80,10 +80,10 @@ export default function Login({ onLogin }) {
             Plateforme sécurisée de gestion et d'archivage des procès-verbaux académiques.
           </p>
 
-         
+
         </div>
 
-        
+
       </motion.div>
 
       {/* ── Right panel — login form ────────────────────────────── */}
@@ -98,14 +98,14 @@ export default function Login({ onLogin }) {
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3">
             <img
-            src={ofpptMiniLogo}
+              src={ofpptMiniLogo}
               alt="OFPPT Logo"
               className="w-10 h-10 object-contain"
             />
             <p className="text-primary font-black text-lg tracking-tight">Système PV</p>
           </div>
 
-          
+
 
           {/* Heading */}
           <div className="space-y-2">

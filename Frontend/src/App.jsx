@@ -20,6 +20,7 @@ export default function App() {
   const [activePage, setActivePage]    = useState('dashboard');
   const [selectedPvId, setSelectedPvId]= useState(null);
   const [sidebarOpen, setSidebarOpen]  = useState(false); // mobile drawer
+  const [isDesktopSidebarOpen, setDesktopSidebarOpen] = useState(true); // desktop sidebar
 
   // ── On mount: verify token via /auth/me ──────────────────────────
   useEffect(() => {
@@ -138,6 +139,14 @@ export default function App() {
     return labels[activePage] || '';
   };
 
+  const handleMenuToggle = () => {
+    if (window.innerWidth >= 1024) {
+      setDesktopSidebarOpen(!isDesktopSidebarOpen);
+    } else {
+      setSidebarOpen(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-surface flex">
       <Sidebar
@@ -147,10 +156,12 @@ export default function App() {
           onLogout={handleLogout}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
+          isDesktopOpen={isDesktopSidebarOpen}
+          onToggleDesktop={() => setDesktopSidebarOpen(!isDesktopSidebarOpen)}
         />
 
-      <main className="flex-1 lg:ml-[260px] min-h-screen flex flex-col">
-        <TopBar activeLabel={getPageLabel()} user={user} onLogout={handleLogout} onNavigate={openPvDetail} onMenuToggle={() => setSidebarOpen(true)} />
+      <main className={`flex-1 min-h-screen flex flex-col transition-all duration-300 ${isDesktopSidebarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'}`}>
+        <TopBar activePage={activePage} activeLabel={getPageLabel()} user={user} onLogout={handleLogout} onNavigate={openPvDetail} onMenuToggle={handleMenuToggle} />
 
         <div className="p-4 sm:p-6 lg:p-10 xl:p-12 max-w-[1440px] mx-auto w-full flex-1">
           <AnimatePresence mode="wait">

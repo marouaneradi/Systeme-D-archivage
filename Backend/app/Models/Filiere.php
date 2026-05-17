@@ -15,6 +15,7 @@ class Filiere extends Model
         'code',
         'name',
         'description',
+        'duration',
     ];
 
     public function academicYear(): BelongsTo

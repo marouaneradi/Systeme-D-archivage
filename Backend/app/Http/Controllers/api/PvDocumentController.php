@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\NotificationController;
 use App\Models\ActivityLog;
 use App\Models\PvDocument;
+use App\Models\Filiere;
+use App\Models\TrainingGroup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -50,9 +52,6 @@ class PvDocumentController extends Controller
         if ($request->filled('groupe')) {
             $query->where('groupe', $request->groupe);
         }
-        if ($request->filled('pv_ff_id')) {
-            $query->where('pv_ff_id', $request->pv_ff_id);
-        }
 
         // ── Search across multiple fields ──────────────────────────
         if ($request->filled('search')) {
@@ -80,14 +79,57 @@ class PvDocumentController extends Controller
     }
 
     /**
+     * GET /api/pv-types/available
+     * Return available PV types based on duration and year level.
+     */
+    public function availableTypes(Request $request): JsonResponse
+    {
+        $request->validate([
+            'filiere_id' => 'required|exists:filieres,id',
+            'training_group_id' => 'required|exists:training_groups,id',
+        ]);
+
+        $filiere = Filiere::findOrFail($request->filiere_id);
+        $group = TrainingGroup::findOrFail($request->training_group_id);
+
+        $duration = $filiere->duration ?? 2; // Default to 2
+        
+        $yearLevel = 1;
+        if (preg_match('/([1-3])\d{2}$/', $group->code, $matches)) {
+            $yearLevel = (int) $matches[1];
+        }
+
+        $types = ['PV_PASSAGE', 'PV_INTERMEDIAIRE'];
+
+        if ($yearLevel == 1) {
+            // 1st year: only PV_PASSAGE, PV_INTERMEDIAIRE
+        } elseif ($yearLevel == 2 && $duration == 2) {
+            // 2nd year (2-year track): add PV_FF
+            $types[] = 'PV_FF';
+        } elseif ($yearLevel == 2 && $duration == 3) {
+            // 2nd year (3-year track): no PV_FF yet
+        } elseif ($yearLevel == 3) {
+            // 3rd year: add PV_FF
+            $types[] = 'PV_FF';
+        }
+
+        return response()->json([
+            'types' => $types,
+            'meta' => [
+                'filiere_duration' => $duration,
+                'group_year_level' => $yearLevel,
+            ]
+        ]);
+    }
+
+    /**
      * POST /api/pv-documents
      * Create a new PV document.
      */
     public function store(Request $request): JsonResponse
     {
-        // Pre-validate the type before loading type-specific rules
         $request->validate([
-            'type' => ['required', Rule::in(['PV_FF', 'PV_CC', 'PV_EFM'])],
+            'type' => ['required', Rule::in(['PV_FF', 'PV_PASSAGE', 'PV_INTERMEDIAIRE'])],
         ]);
 
         $validated = $request->validate($this->rules($request->type));
@@ -100,7 +142,6 @@ class PvDocumentController extends Controller
 
         ActivityLog::record('CREATE', $document, $this->label($document));
 
-        // Notify managers that a new document has been created
         NotificationController::notifyManagers(
             'created',
             'Nouveau document créé',
@@ -124,7 +165,6 @@ class PvDocumentController extends Controller
             'files.uploader:id,name',
         ]);
 
-        // Attach activity history for this specific document
         $history = ActivityLog::where('target_type', 'PvDocument')
             ->where('target_id', $pvDocument->id)
             ->with('user:id,name')
@@ -145,7 +185,6 @@ class PvDocumentController extends Controller
      */
     public function update(Request $request, PvDocument $pvDocument): JsonResponse
     {
-        // Only BROUILLON and EN_ATTENTE can be edited
         if (! in_array($pvDocument->status, ['BROUILLON', 'EN_ATTENTE'])) {
             return response()->json([
                 'message' => 'Ce document ne peut plus être modifié (statut : ' . $pvDocument->status . ').',
@@ -190,7 +229,6 @@ class PvDocumentController extends Controller
             'new_status' => $request->status,
         ]);
 
-        // Notify managers about status change
         $statusLabels = [
             'EN_ATTENTE'       => 'En attente de validation',
             'VALIDE_PAPIER'    => 'Validé (papier)',
@@ -227,20 +265,16 @@ class PvDocumentController extends Controller
      */
     public function dashboardStats(): JsonResponse
     {
-        // Total count
         $total = PvDocument::count();
 
-        // Count by type
         $byType = PvDocument::selectRaw('type, COUNT(*) as count')
             ->groupBy('type')
             ->pluck('count', 'type');
 
-        // Count by status
         $byStatus = PvDocument::selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
 
-        // Monthly activity for current year
         $monthly = PvDocument::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
             ->whereYear('created_at', now()->year)
             ->groupBy('month')
@@ -267,33 +301,27 @@ class PvDocumentController extends Controller
         $common = [
             'physical_location' => ['nullable', 'string', 'max:100'],
             'notes'             => ['nullable', 'string'],
+            'academic_year'     => [$required, 'string', 'max:20'],
+            'niveau'            => [$required, 'string', 'max:50'],
+            'filiere'           => [$required, 'string', 'max:100'],
+            'groupe'            => [$required, 'string', 'max:20'],
+            'academic_year_id'  => ['nullable', 'exists:academic_years,id'],
+            'filiere_id'        => ['nullable', 'exists:filieres,id'],
+            'training_group_id' => ['nullable', 'exists:training_groups,id'],
         ];
 
         return match ($type) {
             'PV_FF' => [
                 ...$common,
                 'type'              => [$required, Rule::in(['PV_FF'])],
-                'academic_year'     => [$required, 'string', 'max:20'],
-                'niveau'            => [$required, 'string', 'max:50'],
-                'filiere'           => [$required, 'string', 'max:100'],
-                'groupe'            => [$required, 'string', 'max:20'],
-                'academic_year_id'  => ['nullable', 'exists:academic_years,id'],
-                'filiere_id'        => ['nullable', 'exists:filieres,id'],
-                'training_group_id' => ['nullable', 'exists:training_groups,id'],
             ],
-            'PV_CC' => [
+            'PV_PASSAGE' => [
                 ...$common,
-                'type'     => [$required, Rule::in(['PV_CC'])],
-                'pv_ff_id' => [$required, 'exists:pv_documents,id'],
-                'module'   => [$required, 'string', 'max:100'],
-                'semester' => [$required, 'string', 'max:20'],
+                'type'     => [$required, Rule::in(['PV_PASSAGE'])],
             ],
-            'PV_EFM' => [
+            'PV_INTERMEDIAIRE' => [
                 ...$common,
-                'type'     => [$required, Rule::in(['PV_EFM'])],
-                'pv_ff_id' => [$required, 'exists:pv_documents,id'],
-                'module'   => [$required, 'string', 'max:100'],
-                'session'  => [$required, Rule::in(['Ordinaire', 'Rattrapage'])],
+                'type'     => [$required, Rule::in(['PV_INTERMEDIAIRE'])],
             ],
             default => [],
         };
@@ -304,11 +332,7 @@ class PvDocumentController extends Controller
      */
     private function label(PvDocument $doc): string
     {
-        return match ($doc->type) {
-            'PV_FF'  => "PV-FF — {$doc->filiere} / {$doc->groupe} ({$doc->academic_year})",
-            'PV_CC'  => "PV-CC — {$doc->module} / {$doc->semester}",
-            'PV_EFM' => "PV-EFM — {$doc->module} / {$doc->session}",
-            default  => "PV #{$doc->id}",
-        };
+        $baseLabel = "{$doc->type} — {$doc->filiere} / {$doc->groupe} ({$doc->academic_year})";
+        return $baseLabel;
     }
 }

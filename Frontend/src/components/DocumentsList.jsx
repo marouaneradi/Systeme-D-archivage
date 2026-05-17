@@ -8,17 +8,17 @@ import api from '../services/api';
 
 // ── Status badge mapping (backend enums → display) ────────────────
 const STATUS_MAP = {
-  BROUILLON:          { label: 'Brouillon',         cls: 'bg-slate-50 text-slate-600 border-slate-200',   dot: 'bg-slate-400'  },
-  EN_ATTENTE:         { label: 'En attente',         cls: 'bg-amber-50 text-amber-700 border-amber-200',   dot: 'bg-amber-400'  },
-  VALIDE_PAPIER:      { label: 'Validé papier',      cls: 'bg-blue-50 text-blue-700 border-blue-200',      dot: 'bg-blue-400'   },
-  ARCHIVE_NUMERIQUE:  { label: 'Archivé numérique',  cls: 'bg-violet-50 text-violet-700 border-violet-200',dot: 'bg-violet-500' },
-  ARCHIVE_COMPLET:    { label: 'Archive complète',   cls: 'bg-green-50 text-green-700 border-green-200',   dot: 'bg-green-500'  },
+  BROUILLON: { label: 'Brouillon', cls: 'bg-slate-50 text-slate-600 border-slate-200', dot: 'bg-slate-400' },
+  EN_ATTENTE: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-400' },
+  VALIDE_PAPIER: { label: 'Validé papier', cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-400' },
+  ARCHIVE_NUMERIQUE: { label: 'Archivé numérique', cls: 'bg-violet-50 text-violet-700 border-violet-200', dot: 'bg-violet-500' },
+  ARCHIVE_COMPLET: { label: 'Archive complète', cls: 'bg-green-50 text-green-700 border-green-200', dot: 'bg-green-500' },
 };
 
 const TYPE_MAP = {
-  PV_FF:  { label: 'PV-FF',  cls: 'bg-purple-50 text-purple-700' },
-  PV_CC:  { label: 'PV-CC',  cls: 'bg-blue-50 text-blue-700'     },
-  PV_EFM: { label: 'PV-EFM', cls: 'bg-green-50 text-green-700'   },
+  PV_FF: { label: 'PV-FF', cls: 'bg-purple-50 text-purple-700' },
+  PV_PASSAGE: { label: 'PV-Passage', cls: 'bg-blue-50 text-blue-700' },
+  PV_INTERMEDIAIRE: { label: 'PV-Intermédiaire', cls: 'bg-green-50 text-green-700' },
 };
 
 const StatusBadge = ({ status }) => {
@@ -33,10 +33,7 @@ const StatusBadge = ({ status }) => {
 
 // ── Helpers ───────────────────────────────────────────────────────
 const docTitle = (doc) => {
-  if (doc.type === 'PV_FF')  return `${doc.filiere ?? '—'} · ${doc.niveau ?? ''} · G${doc.groupe ?? ''}`;
-  if (doc.type === 'PV_CC')  return `${doc.module ?? '—'} · ${doc.semester ?? ''}`;
-  if (doc.type === 'PV_EFM') return `${doc.module ?? '—'} · ${doc.session ?? ''}`;
-  return `PV #${doc.id}`;
+  return `${doc.filiere ?? '—'} · ${doc.niveau ?? ''} · G${doc.groupe ?? ''}`;
 };
 
 const fmtDate = (iso) =>
@@ -44,24 +41,24 @@ const fmtDate = (iso) =>
 
 // ── Main component ────────────────────────────────────────────────
 export const DocumentsList = ({ onViewPv }) => {
-  const [documents,    setDocuments]    = useState([]);
-  const [searchQuery,  setSearchQuery]  = useState('');
-  const [currentPage,  setCurrentPage]  = useState(1);
-  const [totalCount,   setTotalCount]   = useState(0);
-  const [totalPages,   setTotalPages]   = useState(1);
-  const [loading,      setLoading]      = useState(false);
-  const [error,        setError]        = useState('');
-  const [typeFilter,   setTypeFilter]   = useState('');
+  const [documents, setDocuments] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [showFilters,  setShowFilters]  = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchDocuments = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const params = { page: currentPage, per_page: 10 };
-      if (searchQuery)  params.search = searchQuery;
-      if (typeFilter)   params.type   = typeFilter;
+      if (searchQuery) params.search = searchQuery;
+      if (typeFilter) params.type = typeFilter;
       if (statusFilter) params.status = statusFilter;
 
       const { data } = await api.get('/pv-documents', { params });
@@ -119,11 +116,10 @@ export const DocumentsList = ({ onViewPv }) => {
           </div>
           <button
             onClick={() => setShowFilters((v) => !v)}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg font-bold text-[10px] uppercase tracking-[0.15em] transition-all flex-shrink-0 ${
-              showFilters || typeFilter || statusFilter
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg font-bold text-[10px] uppercase tracking-[0.15em] transition-all flex-shrink-0 ${showFilters || typeFilter || statusFilter
                 ? 'border-primary bg-primary text-white'
                 : 'border-outline-variant/60 bg-white text-secondary hover:text-primary hover:bg-surface-container-low'
-            }`}
+              }`}
           >
             <Filter size={16} />
             <span className="hidden sm:inline">Filtres</span> {(typeFilter || statusFilter) ? '●' : ''}
@@ -141,8 +137,8 @@ export const DocumentsList = ({ onViewPv }) => {
           >
             <option value="">Tous les types</option>
             <option value="PV_FF">PV-FF</option>
-            <option value="PV_CC">PV-CC</option>
-            <option value="PV_EFM">PV-EFM</option>
+            <option value="PV_PASSAGE">PV-Passage</option>
+            <option value="PV_INTERMEDIAIRE">PV-Intermédiaire</option>
           </select>
           <select
             value={statusFilter}
@@ -188,7 +184,7 @@ export const DocumentsList = ({ onViewPv }) => {
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
               {loading ? (
-                [1,2,3,4].map((i) => (
+                [1, 2, 3, 4].map((i) => (
                   <tr key={i}>
                     <td colSpan={6} className="px-6 py-4">
                       <div className="h-10 bg-surface-container-low rounded-lg animate-pulse" />
@@ -304,11 +300,10 @@ export const DocumentsList = ({ onViewPv }) => {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className={`w-8 h-8 flex items-center justify-center rounded text-[11px] font-black transition-all ${
-                    p === currentPage
+                  className={`w-8 h-8 flex items-center justify-center rounded text-[11px] font-black transition-all ${p === currentPage
                       ? 'bg-primary text-white shadow-md'
                       : 'border border-outline-variant hover:bg-surface-container-low text-secondary'
-                  }`}
+                    }`}
                 >
                   {p}
                 </button>

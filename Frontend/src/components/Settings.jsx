@@ -238,7 +238,7 @@ export const Settings = () => {
               type="text"
               value={system.institutionName}
               onChange={(e) => setSystem((p) => ({ ...p, institutionName: e.target.value }))}
-              placeholder="Ex: ISTA Casablanca"
+              placeholder="Ex: ISTA Ouarzazate"
               className={inputCls}
             />
           </Field>

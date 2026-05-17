@@ -4,47 +4,47 @@ import {
   Clock, Upload, Trash2, AlertTriangle,
   File, Eye, ChevronRight, User, Calendar,
   MapPin, BookOpen, Users, AlertCircle, X,
-  Link, GitBranch,
+  Link, GitBranch, GraduationCap, FileBarChart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../services/api';
 
 // ── Constants ─────────────────────────────────────────────────────
 const LIFECYCLE = [
-  { key: 'BROUILLON',         label: 'Brouillon',         color: 'bg-slate-400'  },
-  { key: 'EN_ATTENTE',        label: 'En attente',        color: 'bg-amber-400'  },
-  { key: 'VALIDE_PAPIER',     label: 'Validé (papier)',   color: 'bg-blue-400'   },
+  { key: 'BROUILLON', label: 'Brouillon', color: 'bg-slate-400' },
+  { key: 'EN_ATTENTE', label: 'En attente', color: 'bg-amber-400' },
+  { key: 'VALIDE_PAPIER', label: 'Validé (papier)', color: 'bg-blue-400' },
   { key: 'ARCHIVE_NUMERIQUE', label: 'Archivé numérique', color: 'bg-violet-500' },
-  { key: 'ARCHIVE_COMPLET',   label: 'Archive complète',  color: 'bg-green-500'  },
+  { key: 'ARCHIVE_COMPLET', label: 'Archive complète', color: 'bg-green-500' },
 ];
 
 const STATUS_BADGE = {
-  BROUILLON:         'bg-slate-100 text-slate-600 border-slate-200',
-  EN_ATTENTE:        'bg-amber-50 text-amber-700 border-amber-200',
-  VALIDE_PAPIER:     'bg-blue-50 text-blue-700 border-blue-200',
+  BROUILLON: 'bg-slate-100 text-slate-600 border-slate-200',
+  EN_ATTENTE: 'bg-amber-50 text-amber-700 border-amber-200',
+  VALIDE_PAPIER: 'bg-blue-50 text-blue-700 border-blue-200',
   ARCHIVE_NUMERIQUE: 'bg-violet-50 text-violet-700 border-violet-200',
-  ARCHIVE_COMPLET:   'bg-green-50 text-green-700 border-green-200',
+  ARCHIVE_COMPLET: 'bg-green-50 text-green-700 border-green-200',
 };
 
 const TYPE_BADGE = {
-  PV_FF:  'bg-purple-50 text-purple-700',
-  PV_CC:  'bg-blue-50 text-blue-700',
-  PV_EFM: 'bg-green-50 text-green-700',
+  PV_FF: 'bg-purple-50 text-purple-700',
+  PV_PASSAGE: 'bg-blue-50 text-blue-700',
+  PV_INTERMEDIAIRE: 'bg-green-50 text-green-700',
 };
 
 const fmtDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const ACTION_MAP = {
-  CREATE:   'Création',
-  UPDATE:   'Modification',
-  DELETE:   'Suppression',
-  UPLOAD:   'Ajout de fichier',
-  VIEW:     'Consultation',
+  CREATE: 'Création',
+  UPDATE: 'Modification',
+  DELETE: 'Suppression',
+  UPLOAD: 'Ajout de fichier',
+  VIEW: 'Consultation',
   VALIDATE: 'Validation',
-  EXPORT:   'Export',
-  LOGIN:    'Connexion',
-  LOGOUT:   'Déconnexion',
+  EXPORT: 'Export',
+  LOGIN: 'Connexion',
+  LOGOUT: 'Déconnexion',
 };
 
 // ── Sub-components ────────────────────────────────────────────────
@@ -65,14 +65,13 @@ const StatusTimeline = ({ currentStatus }) => {
   return (
     <div className="flex items-center">
       {LIFECYCLE.map((step, idx) => {
-        const done    = idx <= currentIdx;
+        const done = idx <= currentIdx;
         const current = idx === currentIdx;
         return (
           <React.Fragment key={step.key}>
             <div className="flex flex-col items-center gap-1.5">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                done ? `${step.color} border-transparent text-white` : 'bg-surface-container border-outline-variant text-outline'
-              } ${current ? 'ring-4 ring-offset-2 ring-primary/20' : ''}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${done ? `${step.color} border-transparent text-white` : 'bg-surface-container border-outline-variant text-outline'
+                } ${current ? 'ring-4 ring-offset-2 ring-primary/20' : ''}`}>
                 {done ? <CheckCircle size={16} /> : <Clock size={14} />}
               </div>
               <p className={`text-[9px] font-black uppercase tracking-wider text-center w-16 leading-tight ${done ? 'text-primary' : 'text-outline'}`}>
@@ -89,122 +88,20 @@ const StatusTimeline = ({ currentStatus }) => {
   );
 };
 
-// ── Parent PV-FF card (for CC/EFM) ────────────────────────────────
-const ParentPvCard = ({ parentId, onViewPv }) => {
-  const [parent, setParent] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get(`/pv-documents/${parentId}`)
-      .then(({ data }) => setParent(data.document))
-      .catch(() => setParent(null))
-      .finally(() => setLoading(false));
-  }, [parentId]);
-
-  if (loading) return <div className="h-16 bg-surface-container-low rounded-xl animate-pulse" />;
-  if (!parent)  return null;
-
-  return (
-    <div
-      onClick={() => onViewPv?.(parent.id)}
-      className="flex items-center gap-4 p-4 bg-purple-50 border border-purple-200 rounded-xl cursor-pointer hover:bg-purple-100 transition-all group"
-    >
-      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
-        <FileText size={20} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-0.5">PV-FF Parent</p>
-        <p className="text-sm font-black text-purple-800 truncate">
-          {parent.filiere} · {parent.niveau} · G{parent.groupe}
-        </p>
-        <p className="text-[10px] font-bold text-purple-500">{parent.academic_year}</p>
-      </div>
-      <ChevronRight size={16} className="text-purple-400 group-hover:text-purple-600 flex-shrink-0" />
-    </div>
-  );
-};
-
-// ── Children list (for PV-FF) ─────────────────────────────────────
-const ChildrenList = ({ pvFfId, onViewPv }) => {
-  const [children, setChildren] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-
-  useEffect(() => {
-    api.get('/pv-documents', { params: { pv_ff_id: pvFfId, per_page: 50 } })
-      .then(({ data }) => setChildren(data.data))
-      .catch(() => setChildren([]))
-      .finally(() => setLoading(false));
-  }, [pvFfId]);
-
-  if (loading) return (
-    <div className="space-y-2">
-      {[1,2].map((i) => <div key={i} className="h-14 bg-surface-container-low rounded-xl animate-pulse" />)}
-    </div>
-  );
-
-  if (children.length === 0) return (
-    <div className="flex flex-col items-center py-8 gap-2 border-2 border-dashed border-outline-variant/40 rounded-xl">
-      <GitBranch size={24} className="text-outline-variant" />
-      <p className="text-xs font-bold text-secondary uppercase tracking-widest">Aucun document lié</p>
-      <p className="text-[10px] text-outline">Les PV-CC et PV-EFM liés apparaîtront ici.</p>
-    </div>
-  );
-
-  const ccList  = children.filter((c) => c.type === 'PV_CC');
-  const efmList = children.filter((c) => c.type === 'PV_EFM');
-
-  return (
-    <div className="space-y-3">
-      {[{ label: 'PV-CC — Contrôles Continus', list: ccList, cls: 'bg-blue-50 border-blue-200 text-blue-800', dot: 'bg-blue-400' },
-        { label: 'PV-EFM — Examens Fin de Module', list: efmList, cls: 'bg-green-50 border-green-200 text-green-800', dot: 'bg-green-400' }
-      ].map(({ label, list, cls, dot }) =>
-        list.length > 0 && (
-          <div key={label} className="space-y-2">
-            <p className="text-[10px] font-black text-secondary uppercase tracking-widest flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${dot}`} />
-              {label} ({list.length})
-            </p>
-            {list.map((child) => (
-              <motion.div
-                key={child.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                onClick={() => onViewPv?.(child.id)}
-                className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:brightness-95 transition-all group ${cls}`}
-              >
-                <FileText size={16} className="flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-black truncate">{child.module ?? '—'}</p>
-                  <p className="text-[10px] font-medium opacity-70">
-                    {child.semester ?? child.session ?? ''} · #{child.id}
-                  </p>
-                </div>
-                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${STATUS_BADGE[child.status] ?? ''}`}>
-                  {LIFECYCLE.find((s) => s.key === child.status)?.label ?? child.status}
-                </span>
-                <ChevronRight size={14} className="opacity-40 group-hover:opacity-100 flex-shrink-0" />
-              </motion.div>
-            ))}
-          </div>
-        )
-      )}
-    </div>
-  );
-};
 
 // ── Main Component ────────────────────────────────────────────────
 export const PvDetail = ({ pvId, onBack, onViewPv }) => {
-  const [document,      setDocument]      = useState(null);
-  const [files,         setFiles]         = useState([]);
-  const [history,       setHistory]       = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [error,         setError]         = useState('');
-  const [updatingStatus,setUpdatingStatus]= useState(false);
-  const [showStatusMenu,setShowStatusMenu]= useState(false);
-  const [uploading,     setUploading]     = useState(false);
-  const [uploadErr,     setUploadErr]     = useState('');
+  const [document, setDocument] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [deleting,      setDeleting]      = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchDocument = async () => {
     setLoading(true);
@@ -238,7 +135,6 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
     }
   };
 
-  // ✅ Fixed: files[] instead of file
   const handleFileUpload = async (e) => {
     const fileList = Array.from(e.target.files);
     if (!fileList.length) return;
@@ -264,8 +160,8 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
 
   const handleDownload = async (file) => {
     try {
-      const res  = await api.get(`/pv-files/${file.id}/download`, { responseType: 'blob' });
-      const url  = URL.createObjectURL(res.data);
+      const res = await api.get(`/pv-files/${file.id}/download`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
       const link = window.document.createElement('a');
       link.href = url; link.download = file.original_name; link.click();
       URL.revokeObjectURL(url);
@@ -295,10 +191,7 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
     }
   };
 
-  // Navigate to another PV (parent or child)
-  const handleViewRelated = (id) => onViewPv?.(id) ?? onBack?.();
-
-  const currentIdx   = LIFECYCLE.findIndex((s) => s.key === document?.status);
+  const currentIdx = LIFECYCLE.findIndex((s) => s.key === document?.status);
   const nextStatuses = LIFECYCLE.filter((_, i) => i === currentIdx + 1 || i === currentIdx - 1);
 
   if (loading) return (
@@ -317,15 +210,11 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
     </div>
   );
 
-  const docLabel = document?.type === 'PV_FF'
-    ? `${document.filiere} · G${document.groupe}`
-    : document?.module ?? `PV #${document?.id}`;
-
-  const isPvFF  = document?.type === 'PV_FF';
-  const isChild = document?.type === 'PV_CC' || document?.type === 'PV_EFM';
+  const docLabel = `${document?.filiere ?? ''} · G${document?.groupe ?? ''}`;
+  const isPvFF = document?.type === 'PV_FF';
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-16">
 
       {/* Error banner */}
       {error && (
@@ -370,7 +259,7 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-primary-container transition-all shadow-lg shadow-primary/10 disabled:opacity-60"
           >
             {updatingStatus
-              ? <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+              ? <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
               : <CheckCircle size={16} />}
             Changer statut
           </button>
@@ -407,48 +296,24 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
         {/* Left */}
         <div className="lg:col-span-8 space-y-8">
 
-          {/* ── Parent PV-FF (for CC/EFM only) ─────────────────── */}
-          {isChild && document?.pv_ff_id && (
-            <div className="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm space-y-4">
-              <h3 className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                <Link size={16} />
-                Document Parent
-              </h3>
-              <ParentPvCard parentId={document.pv_ff_id} onViewPv={handleViewRelated} />
-            </div>
-          )}
-
           {/* Metadata */}
           <div className="bg-white border border-outline-variant rounded-2xl p-8 shadow-sm">
             <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-6">Informations académiques</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {isPvFF ? (
-                <>
-                  <InfoRow icon={FileText}  label="Type de PV"           value="PV Fin de Formation" />
-                  <InfoRow icon={Calendar}  label="Année universitaire"  value={document?.academic_year} />
-                  <InfoRow icon={BookOpen}  label="Filière"              value={document?.filiere} />
-                  <InfoRow icon={Users}     label="Niveau & Groupe"      value={`${document?.niveau ?? '—'} — G${document?.groupe ?? '?'}`} />
-                </>
-              ) : document?.type === 'PV_CC' ? (
-                <>
-                  <InfoRow icon={FileText}  label="Type de PV"   value="PV Contrôles Continus" />
-                  <InfoRow icon={BookOpen}  label="Module"       value={document?.module} />
-                  <InfoRow icon={Calendar}  label="Semestre"     value={document?.semester} />
-                </>
-              ) : (
-                <>
-                  <InfoRow icon={FileText}  label="Type de PV"   value="PV Examen Fin de Module" />
-                  <InfoRow icon={BookOpen}  label="Module"       value={document?.module} />
-                  <InfoRow icon={Calendar}  label="Session"      value={document?.session} />
-                </>
-              )}
-              <InfoRow icon={MapPin}    label="Localisation physique" value={document?.physical_location} />
-              <InfoRow icon={User}      label="Créé par"             value={document?.creator?.name} />
-              <InfoRow icon={Calendar}  label="Date de création"     value={fmtDate(document?.created_at)} />
+
+              <InfoRow icon={FileText} label="Type de PV" value={document?.type?.replace('_', '-')} />
+              <InfoRow icon={Calendar} label="Année universitaire" value={document?.academic_year} />
+              <InfoRow icon={BookOpen} label="Filière" value={document?.filiere} />
+              <InfoRow icon={Users} label="Niveau & Groupe" value={`${document?.niveau ?? '—'} — G${document?.groupe ?? '?'}`} />
+
+              <InfoRow icon={MapPin} label="Localisation physique" value={document?.physical_location} />
+              <InfoRow icon={User} label="Créé par" value={document?.creator?.name} />
+              <InfoRow icon={Calendar} label="Date de création" value={fmtDate(document?.created_at)} />
               {document?.validator && (
                 <InfoRow icon={CheckCircle} label="Validé par" value={document.validator?.name} />
               )}
             </div>
+
             {document?.notes && (
               <div className="mt-6 p-4 bg-surface-container-low/50 rounded-xl border border-outline-variant/30">
                 <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">Notes</p>
@@ -457,17 +322,6 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
             )}
           </div>
 
-          {/* ── Children (for PV-FF only) ───────────────────────── */}
-          {isPvFF && (
-            <div className="bg-white border border-outline-variant rounded-2xl p-8 shadow-sm space-y-4">
-              <h3 className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                <GitBranch size={16} />
-                Documents liés (CC & EFM)
-              </h3>
-              <ChildrenList pvFfId={document.id} onViewPv={handleViewRelated} />
-            </div>
-          )}
-
           {/* Files */}
           <div className="bg-white border border-outline-variant rounded-2xl p-8 shadow-sm">
             <div className="flex items-center justify-between mb-6">
@@ -475,7 +329,7 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
               <label className={`flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer hover:bg-primary-container ${uploading ? 'opacity-60 cursor-not-allowed' : ''}`}>
                 <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleFileUpload} disabled={uploading} />
                 {uploading
-                  ? <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                  ? <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
                   : <Upload size={16} />}
                 {uploading ? 'Envoi…' : 'Ajouter un scan'}
               </label>
@@ -573,7 +427,7 @@ export const PvDetail = ({ pvId, onBack, onViewPv }) => {
                   <button onClick={handleDelete} disabled={deleting}
                     className="flex-1 py-2 bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-700 transition-all disabled:opacity-60 flex items-center justify-center gap-1">
                     {deleting
-                      ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                      ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
                       : <Trash2 size={13} />}
                     Supprimer
                   </button>
