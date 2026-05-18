@@ -421,25 +421,7 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
           })}
         </nav>
 
-        {/* User info + logout */}
-        <div className="mt-auto px-4 py-4 border-t border-white/10 space-y-3 bg-black/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-black flex-shrink-0 shadow-lg shadow-blue-500/30">
-              {initials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{user?.name ?? 'Utilisateur'}</p>
-              <p className="text-[10px] text-blue-200 truncate">{ROLE_LABELS[role] ?? role}</p>
-            </div>
-            <button
-              onClick={onLogout}
-              title="Se déconnecter"
-              className="p-2 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
-            >
-              <LogOut size={18} />
-            </button>
-          </div>
-        </div>
+
       </div>
     </div>
   );
@@ -454,14 +436,14 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
       {/* ── Desktop Toggle Arrow ─────────────────────────────────── */}
       <button
         onClick={onToggleDesktop}
-        className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] w-7 h-7 bg-white border border-slate-200/60 items-center justify-center text-slate-400 shadow-md hover:text-slate-800 transition-all duration-300 ${
+        className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] items-center justify-center transition-all duration-300 ${
           isDesktopOpen 
-            ? 'left-[246px] rounded-full hover:bg-slate-50' 
-            : 'left-0 rounded-r-full border-l-0 hover:w-8 hover:bg-blue-50 hover:text-blue-600'
+            ? 'w-7 h-7 bg-white border border-slate-200/60 text-slate-400 shadow-md hover:text-slate-800 left-[246px] rounded-full hover:bg-slate-50' 
+            : 'w-8 h-14 bg-blue-600 text-white shadow-lg left-0 rounded-r-xl border border-l-0 border-blue-700 hover:w-10 hover:bg-blue-700'
         }`}
         aria-label="Basculer le menu"
       >
-        {isDesktopOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+        {isDesktopOpen ? <ChevronLeft size={16} /> : <ChevronRight size={20} />}
       </button>
 
       {/* ── Mobile/Tablet: slide-in drawer (<lg) ─────────────────── */}
