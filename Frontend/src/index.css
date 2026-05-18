@@ -52,3 +52,14 @@
     width: 100%;
   }
 }
+
+@layer utilities {
+  /* Hides scrollbar track while keeping scroll functionality */
+  .custom-scrollbar {
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* IE / Edge legacy */
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    display: none;                /* Chrome, Safari, Opera */
+  }
+}
