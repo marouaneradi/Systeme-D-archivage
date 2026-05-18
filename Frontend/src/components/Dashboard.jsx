@@ -39,6 +39,69 @@ const StatCard = ({ title, value, sub, icon: Icon, colorClass, loading }) => (
   </div>
 );
 
+// ── PvTotalCard ───────────────────────────────────────────────────
+const PvTotalCard = ({ archived, expected, loading }) => {
+  const pct = expected > 0 ? Math.min(Math.round((archived / expected) * 100), 100) : 0;
+  const barColor =
+    pct >= 80 ? 'bg-green-500' :
+    pct >= 50 ? 'bg-blue-500' :
+    pct >= 25 ? 'bg-amber-500' : 'bg-red-400';
+
+  return (
+    <div className="bg-white p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-4">
+        <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+          <FileBox size={24} />
+        </div>
+        {!loading && expected > 0 && (
+          <span
+            className={`text-[11px] font-black px-2 py-1 rounded-full ${
+              pct >= 80 ? 'bg-green-50 text-green-700' :
+              pct >= 50 ? 'bg-blue-50 text-blue-700' :
+              pct >= 25 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-600'
+            }`}
+          >
+            {pct}% complété
+          </span>
+        )}
+      </div>
+
+      <p className="text-secondary text-xs font-semibold uppercase tracking-wider">Total des PV</p>
+
+      {loading ? (
+        <div className="space-y-2 mt-1">
+          <div className="h-8 w-32 bg-surface-container-low rounded-lg animate-pulse" />
+          <div className="h-2 w-full bg-surface-container-low rounded-full animate-pulse" />
+        </div>
+      ) : (
+        <>
+          <div className="flex items-baseline gap-1 mt-1">
+            <span className="text-2xl font-black text-primary tracking-tight">{archived ?? 0}</span>
+            <span className="text-base font-bold text-outline">/</span>
+            <span className="text-base font-bold text-secondary">{expected > 0 ? expected : '—'}</span>
+          </div>
+
+          {expected > 0 ? (
+            <div className="mt-3 space-y-1">
+              <div className="h-2 w-full bg-surface-container-low rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${barColor} rounded-full transition-all duration-700`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-secondary font-medium">
+                {archived ?? 0} archivés · {expected - (archived ?? 0)} restants
+              </p>
+            </div>
+          ) : (
+            <p className="text-[10px] text-secondary font-medium mt-1">Aucune promotion importée</p>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
 // ── Bar chart ─────────────────────────────────────────────────────
 const MONTHS = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUN', 'JUL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
 
@@ -134,12 +197,9 @@ export const Dashboard = ({ onNavigate, user }) => {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total des PV"
-          value={stats?.total}
-          sub={`${stats?.by_type?.PV_FF ?? 0} FF · ${stats?.by_type?.PV_PASSAGE ?? 0} Passage · ${stats?.by_type?.PV_INTERMEDIAIRE ?? 0} Inter`}
-          icon={FileBox}
-          colorClass="bg-blue-50 text-blue-600"
+        <PvTotalCard
+          archived={stats?.total ?? 0}
+          expected={stats?.expected_total ?? 0}
           loading={loading}
         />
         <StatCard

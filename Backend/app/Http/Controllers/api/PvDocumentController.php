@@ -288,11 +288,39 @@ class PvDocumentController extends Controller
             ->orderBy('month')
             ->get();
 
+        // ── Expected PV total (dynamic, based on training groups) ────
+        // Business rules:
+        //   1st year  (code starts with 1xx): PV_PASSAGE + PV_INTERMEDIAIRE           = 2
+        //   2nd year  (code starts with 2xx): + PV_FF only if filière duration == 2   = 3 or 2
+        //   3rd year  (code starts with 3xx): PV_PASSAGE + PV_INTERMEDIAIRE + PV_FF   = 3
+        $groups = TrainingGroup::with('filiere:id,duration')->get(['id', 'code', 'filiere_id']);
+
+        $expectedTotal = 0;
+        foreach ($groups as $group) {
+            $yearLevel = 1;
+            if (preg_match('/([1-3])\d{2}/', $group->code, $m)) {
+                $yearLevel = (int) $m[1];
+            }
+
+            $duration = $group->filiere?->duration ?? 2;
+
+            if ($yearLevel === 1) {
+                $expectedTotal += 2; // PV_PASSAGE + PV_INTERMEDIAIRE
+            } elseif ($yearLevel === 2) {
+                $expectedTotal += ($duration == 2) ? 3 : 2;
+            } elseif ($yearLevel === 3) {
+                $expectedTotal += 3; // PV_PASSAGE + PV_INTERMEDIAIRE + PV_FF
+            } else {
+                $expectedTotal += 2; // fallback
+            }
+        }
+
         return response()->json([
-            'total' => $total,
-            'by_type' => $byType,
-            'by_status' => $byStatus,
-            'monthly' => $monthly,
+            'total'          => $total,
+            'expected_total' => $expectedTotal,
+            'by_type'        => $byType,
+            'by_status'      => $byStatus,
+            'monthly'        => $monthly,
         ]);
     }
 
