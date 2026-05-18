@@ -302,9 +302,9 @@ const DocsAccordion = ({ onNavigate, activePage, currentFilter }) => {
 // ── Sidebar menu items ────────────────────────────────────────────
 const ALL_MENU_ITEMS = [
   { id: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
-  { id: 'documents', label: 'Documents PV', icon: FileText, hasAccordion: true },
-  { id: 'add', label: 'Nouvel Ajout', icon: PlusCircle, allowedRoles: ['admin', 'gestionnaire', 'archiviste'] },
   { id: 'training', label: 'Nouvelle Promotion', icon: PlusCircle, allowedRoles: ['admin', 'gestionnaire'] },
+  { id: 'add', label: 'Nouvel Ajout', icon: PlusCircle, allowedRoles: ['admin', 'gestionnaire', 'archiviste'] },
+  { id: 'documents', label: 'Documents PV', icon: FileText, hasAccordion: true },
   { id: 'search', label: 'Recherche Avancée', icon: Search },
   { id: 'activity', label: "Journal d'activité", icon: History, allowedRoles: ['admin', 'gestionnaire'] },
   { id: 'users', label: 'Utilisateurs', icon: User, allowedRoles: ['admin'] },
