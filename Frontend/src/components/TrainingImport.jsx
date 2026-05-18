@@ -10,7 +10,7 @@ export const TrainingImport = ({ onNavigate, user }) => {
   const isAdmin = user?.role === 'admin';
   // Step 1: Promotion creation
   const [promotionYear, setPromotionYear] = useState(''); // format: 'YYYY-YYYY'
-  const [promotionDesc, setPromotionDesc] = useState('');
+
   const [creatingPromotion, setCreatingPromotion] = useState(false);
   const [promotionError, setPromotionError] = useState('');
 
@@ -59,7 +59,6 @@ export const TrainingImport = ({ onNavigate, user }) => {
     try {
       const response = await api.post('/training/academic-years', {
         year: year,
-        description: promotionDesc || null,
       });
 
       const newPromotion = response.data?.data ?? {};
@@ -69,7 +68,6 @@ export const TrainingImport = ({ onNavigate, user }) => {
         newPromotion,
       ]);
       setPromotionYear('');
-      setPromotionDesc('');
       setImportResult(null);
     } catch (err) {
       if (err.response?.status === 422) {
@@ -137,7 +135,6 @@ export const TrainingImport = ({ onNavigate, user }) => {
     setFile(null);
     setImportResult(null);
     setPromotionYear('');
-    setPromotionDesc('');
   };
 
   return (
@@ -199,20 +196,6 @@ export const TrainingImport = ({ onNavigate, user }) => {
               <p className="text-[10px] text-outline">Format attendu : AAAA-AAAA (ex : 2025-2026).</p>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="desc-input" className="block text-[10px] font-black uppercase tracking-widest text-secondary">
-                Description (optionnel)
-              </label>
-              <input
-                id="desc-input"
-                type="text"
-                value={promotionDesc}
-                onChange={(e) => setPromotionDesc(e.target.value)}
-                placeholder="Ex: Formation initiale ou particulière"
-                className={inputCls}
-              />
-            </div>
-
             {promotionError && (
               <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 flex gap-3 text-sm text-red-700">
                 <Info size={16} className="mt-0.5 flex-shrink-0" />
@@ -232,9 +215,7 @@ export const TrainingImport = ({ onNavigate, user }) => {
                 <div>
                   <p className="font-black text-green-700">Promotion créée</p>
                   <p className="text-sm text-green-600 mt-1">{currentPromotion.label}</p>
-                  {currentPromotion.description && (
-                    <p className="text-xs text-green-600 mt-1 italic">{currentPromotion.description}</p>
-                  )}
+
                 </div>
               </div>
             </div>
