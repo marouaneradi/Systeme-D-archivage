@@ -53,6 +53,22 @@ class PvDocumentController extends Controller
             $query->where('groupe', $request->groupe);
         }
 
+        // ── Sidebar tree filters ───────────────────────────────────
+        // Filter by academic year FK (sent as academic_year_id from sidebar)
+        if ($request->filled('academic_year_id')) {
+            $query->where('academic_year_id', $request->academic_year_id);
+        }
+
+        // Filter by year level (1, 2, 3) derived from training group code prefix
+        // Group codes follow the pattern: LETTERS + yearDigit + twoDigits (e.g. DEV201 → year 2)
+        if ($request->filled('year_level')) {
+            $yearLevel = (int) $request->year_level;
+            $query->whereHas('trainingGroup', function ($q) use ($yearLevel) {
+                // Match codes where the numeric part starts with the year level digit
+                $q->whereRaw("code REGEXP ?", [$yearLevel . '[0-9][0-9]$']);
+            });
+        }
+
         // ── Search across multiple fields ──────────────────────────
         if ($request->filled('search')) {
             $term = $request->search;

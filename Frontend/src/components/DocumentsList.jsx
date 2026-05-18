@@ -65,7 +65,7 @@ export const DocumentsList = ({ onViewPv, yearId = null, pvType = null, yearLabe
       if (typeFilter) params.type = typeFilter;
       if (statusFilter) params.status = statusFilter;
       if (yearId) params.academic_year_id = yearId;
-      if (niveau) params.niveau = niveau;
+      if (niveau) params.year_level = niveau; // sidebar sends '1','2','3' — matched via group code prefix in backend
 
       const { data } = await api.get('/pv-documents', { params });
 
@@ -77,7 +77,7 @@ export const DocumentsList = ({ onViewPv, yearId = null, pvType = null, yearLabe
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchQuery, typeFilter, statusFilter]);
+  }, [currentPage, searchQuery, typeFilter, statusFilter, yearId, niveau]);
 
   // Debounced search — wait 400ms after typing
   useEffect(() => {
@@ -85,8 +85,8 @@ export const DocumentsList = ({ onViewPv, yearId = null, pvType = null, yearLabe
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  // Immediate fetch on page/filter change
-  useEffect(() => { fetchDocuments(); }, [currentPage, typeFilter, statusFilter]);
+  // Immediate fetch on page/filter/sidebar change
+  useEffect(() => { fetchDocuments(); }, [currentPage, typeFilter, statusFilter, yearId, niveau]);
 
   const handleDownload = async (doc) => {
     if (!doc.files_count) return;
