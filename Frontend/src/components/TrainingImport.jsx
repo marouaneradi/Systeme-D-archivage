@@ -249,7 +249,7 @@ export const TrainingImport = ({ onNavigate, user }) => {
       {/* ── STEP 2: File Import (only shown after promotion creation) ─ */}
       {currentPromotion && (
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8">
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             <div className="bg-white border border-outline-variant rounded-3xl p-8 shadow-sm space-y-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-primary/10 text-primary rounded-2xl"><Upload size={20} /></div>

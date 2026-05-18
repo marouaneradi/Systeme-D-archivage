@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, FileText, Download, CheckCircle,
   Clock, Upload, Trash2, AlertTriangle,
-  File, Eye, ChevronRight, User, Calendar,
+  File, Eye, ChevronRight, ChevronLeft, User, Calendar,
   MapPin, BookOpen, Users, AlertCircle, X,
   Link, GitBranch, GraduationCap, FileBarChart
 } from 'lucide-react';
@@ -63,48 +63,50 @@ const InfoRow = ({ icon: Icon, label, value }) => (
 const StatusTimeline = ({ currentStatus }) => {
   const currentIdx = LIFECYCLE.findIndex((s) => s.key === currentStatus);
   return (
-    <div className="flex items-center">
-      {LIFECYCLE.map((step, idx) => {
-        const done = idx <= currentIdx;
-        const current = idx === currentIdx;
-        return (
-          <React.Fragment key={step.key}>
-            <div className="flex flex-col items-center gap-1.5">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${done ? `${step.color} border-transparent text-white` : 'bg-surface-container border-outline-variant text-outline'
-                } ${current ? 'ring-4 ring-offset-2 ring-primary/20' : ''}`}>
-                {done ? <CheckCircle size={16} /> : <Clock size={14} />}
+    <div className="overflow-x-auto pb-4">
+      <div className="flex items-center min-w-max">
+        {LIFECYCLE.map((step, idx) => {
+          const done = idx <= currentIdx;
+          const current = idx === currentIdx;
+          return (
+            <React.Fragment key={step.key}>
+              <div className="flex flex-col items-center gap-1.5">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${done ? `${step.color} border-transparent text-white` : 'bg-surface-container border-outline-variant text-outline'
+                  } ${current ? 'ring-4 ring-offset-2 ring-primary/20' : ''}`}>
+                  {done ? <CheckCircle size={16} /> : <Clock size={14} />}
+                </div>
+                <p className={`text-[9px] font-black uppercase tracking-wider text-center w-16 leading-tight ${done ? 'text-primary' : 'text-outline'}`}>
+                  {step.label}
+                </p>
               </div>
-              <p className={`text-[9px] font-black uppercase tracking-wider text-center w-16 leading-tight ${done ? 'text-primary' : 'text-outline'}`}>
-                {step.label}
-              </p>
-            </div>
-            {idx < LIFECYCLE.length - 1 && (
-              <div className={`flex-1 h-0.5 mb-5 mx-1 ${idx < currentIdx ? 'bg-primary' : 'bg-outline-variant/30'}`} />
-            )}
-          </React.Fragment>
-        );
-      })}
+              {idx < LIFECYCLE.length - 1 && (
+                <div className={`flex-1 w-8 sm:w-12 md:w-16 h-0.5 mb-5 mx-1 ${idx < currentIdx ? 'bg-primary' : 'bg-outline-variant/30'}`} />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 };
 
 
 // ── Main Component ────────────────────────────────────────────────
-export const PvDetail = ({ pvId, onBack, onViewPv, user }) => {
+export const PvDetail = ({ pvId, onBack, onViewPv }) => {
   const [document, setDocument] = useState(null);
   const [files, setFiles] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
-  // Pagination for history
-  const [historyPage, setHistoryPage] = useState(1);
-  const HISTORY_PER_PAGE = 5;
   const [uploadErr, setUploadErr] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyPerPage = 5;
 
   const fetchDocument = async () => {
     setLoading(true);
@@ -233,7 +235,7 @@ export const PvDetail = ({ pvId, onBack, onViewPv, user }) => {
         <button onClick={onBack} className="p-2 border border-outline-variant rounded-xl bg-white text-secondary hover:text-primary hover:bg-surface-container-low transition-all flex-shrink-0 mt-1">
           <ArrowLeft size={20} />
         </button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 text-outline mb-1">
             <button onClick={onBack} className="text-[10px] font-bold uppercase tracking-widest hover:text-primary transition-colors">Documents PV</button>
             <ChevronRight size={12} />
@@ -388,7 +390,7 @@ export const PvDetail = ({ pvId, onBack, onViewPv, user }) => {
               <div className="relative">
                 <div className="absolute left-4 top-0 bottom-0 w-px bg-outline-variant/30" />
                 <div className="space-y-6">
-                  {history.slice((historyPage - 1) * HISTORY_PER_PAGE, historyPage * HISTORY_PER_PAGE).map((entry) => (
+                  {history.slice((historyPage - 1) * historyPerPage, historyPage * historyPerPage).map((entry) => (
                     <div key={entry.id} className="flex gap-4 relative">
                       <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center flex-shrink-0 relative z-10">
                         <Clock size={14} className="text-secondary" />
@@ -403,25 +405,24 @@ export const PvDetail = ({ pvId, onBack, onViewPv, user }) => {
                     </div>
                   ))}
                 </div>
-                {/* Pagination Controls */}
-                {history.length > HISTORY_PER_PAGE && (
-                  <div className="flex items-center justify-between pt-6 border-t border-outline-variant/30 mt-6 relative z-10 bg-white">
-                    <button
+                {Math.ceil(history.length / historyPerPage) > 1 && (
+                  <div className="flex justify-between items-center mt-6 pt-4 border-t border-outline-variant/30">
+                    <button 
                       onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
                       disabled={historyPage === 1}
-                      className="px-3 py-1.5 text-xs font-bold text-secondary border border-outline-variant rounded-lg hover:bg-surface-container-low disabled:opacity-30 transition-all"
+                      className="p-1.5 text-secondary hover:text-primary disabled:opacity-30 transition-colors"
                     >
-                      Précédent
+                      <ChevronLeft size={18} />
                     </button>
-                    <span className="text-[10px] font-black text-secondary tracking-widest">
-                      {historyPage} / {Math.ceil(history.length / HISTORY_PER_PAGE)}
+                    <span className="text-[10px] font-black uppercase tracking-widest text-secondary">
+                      {historyPage} / {Math.ceil(history.length / historyPerPage)}
                     </span>
-                    <button
-                      onClick={() => setHistoryPage(p => Math.min(Math.ceil(history.length / HISTORY_PER_PAGE), p + 1))}
-                      disabled={historyPage === Math.ceil(history.length / HISTORY_PER_PAGE)}
-                      className="px-3 py-1.5 text-xs font-bold text-secondary border border-outline-variant rounded-lg hover:bg-surface-container-low disabled:opacity-30 transition-all"
+                    <button 
+                      onClick={() => setHistoryPage(p => Math.min(Math.ceil(history.length / historyPerPage), p + 1))}
+                      disabled={historyPage === Math.ceil(history.length / historyPerPage)}
+                      className="p-1.5 text-secondary hover:text-primary disabled:opacity-30 transition-colors"
                     >
-                      Suivant
+                      <ChevronRight size={18} />
                     </button>
                   </div>
                 )}
@@ -430,38 +431,36 @@ export const PvDetail = ({ pvId, onBack, onViewPv, user }) => {
           </div>
 
           {/* Danger zone */}
-          {user?.role === 'admin' && (
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 space-y-3 mt-8">
-              <div className="flex items-center gap-2 text-red-700">
-                <AlertTriangle size={16} />
-                <h3 className="text-xs font-black uppercase tracking-widest">Zone de danger</h3>
-              </div>
-              <p className="text-xs font-medium text-red-600 leading-relaxed">La suppression d'un document est irréversible.</p>
-              {!deleteConfirm ? (
-                <button onClick={() => setDeleteConfirm(true)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 border border-red-300 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
-                  <Trash2 size={14} /> Supprimer ce PV
-                </button>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-xs font-black text-red-700 text-center">Confirmer la suppression ?</p>
-                  <div className="flex gap-2">
-                    <button onClick={() => setDeleteConfirm(false)}
-                      className="flex-1 py-2 border border-red-200 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-50 transition-all">
-                      Annuler
-                    </button>
-                    <button onClick={handleDelete} disabled={deleting}
-                      className="flex-1 py-2 bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-700 transition-all disabled:opacity-60 flex items-center justify-center gap-1">
-                      {deleting
-                        ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
-                        : <Trash2 size={14} />}
-                      Confirmer
-                    </button>
-                  </div>
-                </div>
-              )}
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 space-y-3">
+            <div className="flex items-center gap-2 text-red-700">
+              <AlertTriangle size={16} />
+              <h3 className="text-xs font-black uppercase tracking-widest">Zone de danger</h3>
             </div>
-          )}
+            <p className="text-xs font-medium text-red-600 leading-relaxed">La suppression d'un document est irréversible.</p>
+            {!deleteConfirm ? (
+              <button onClick={() => setDeleteConfirm(true)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border border-red-300 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
+                <Trash2 size={14} /> Supprimer ce PV
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs font-black text-red-700 text-center">Confirmer la suppression ?</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setDeleteConfirm(false)}
+                    className="flex-1 py-2 border border-red-200 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-50 transition-all">
+                    Annuler
+                  </button>
+                  <button onClick={handleDelete} disabled={deleting}
+                    className="flex-1 py-2 bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-700 transition-all disabled:opacity-60 flex items-center justify-center gap-1">
+                    {deleting
+                      ? <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
+                      : <Trash2 size={13} />}
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

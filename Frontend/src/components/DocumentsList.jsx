@@ -40,7 +40,7 @@ const fmtDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 // ── Main component ────────────────────────────────────────────────
-export const DocumentsList = ({ onViewPv }) => {
+export const DocumentsList = ({ onViewPv, yearId = null, pvType = null, yearLabel = null, niveau = null }) => {
   const [documents, setDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,9 +48,13 @@ export const DocumentsList = ({ onViewPv }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState(pvType ?? '');
   const [statusFilter, setStatusFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Sync when tree navigation sends new props
+  useEffect(() => { setTypeFilter(pvType ?? ''); setCurrentPage(1); }, [pvType]);
+  useEffect(() => { setCurrentPage(1); }, [yearId, niveau]);
 
   const fetchDocuments = useCallback(async () => {
     setLoading(true);
@@ -60,6 +64,8 @@ export const DocumentsList = ({ onViewPv }) => {
       if (searchQuery) params.search = searchQuery;
       if (typeFilter) params.type = typeFilter;
       if (statusFilter) params.status = statusFilter;
+      if (yearId) params.academic_year_id = yearId;
+      if (niveau) params.niveau = niveau;
 
       const { data } = await api.get('/pv-documents', { params });
 
@@ -96,6 +102,20 @@ export const DocumentsList = ({ onViewPv }) => {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-primary tracking-tighter uppercase">Documents PV</h1>
+          {(yearLabel || pvType) && (
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              {yearLabel && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-black bg-primary/10 text-primary px-2.5 py-1 rounded-full uppercase tracking-widest">
+                  📅 {yearLabel}
+                </span>
+              )}
+              {pvType && TYPE_MAP[pvType] && (
+                <span className={`inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${TYPE_MAP[pvType].cls}`}>
+                  {TYPE_MAP[pvType].label}
+                </span>
+              )}
+            </div>
+          )}
           <p className="text-secondary text-sm font-medium mt-1">
             Gestion complète des archives documentaires et scans.
             {totalCount > 0 && (
@@ -117,8 +137,8 @@ export const DocumentsList = ({ onViewPv }) => {
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg font-bold text-[10px] uppercase tracking-[0.15em] transition-all flex-shrink-0 ${showFilters || typeFilter || statusFilter
-                ? 'border-primary bg-primary text-white'
-                : 'border-outline-variant/60 bg-white text-secondary hover:text-primary hover:bg-surface-container-low'
+              ? 'border-primary bg-primary text-white'
+              : 'border-outline-variant/60 bg-white text-secondary hover:text-primary hover:bg-surface-container-low'
               }`}
           >
             <Filter size={16} />
@@ -169,17 +189,17 @@ export const DocumentsList = ({ onViewPv }) => {
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-outline-variant shadow-lg overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-xl border border-outline-variant shadow-lg overflow-hidden min-w-0">
+        <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container-low/50 border-b border-outline-variant/30">
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em]">Document</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em]">Type</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em]">Année / Filière</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em]">Créé le</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em] text-center">Statut</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em] text-right">Actions</th>
+                <th className="px-3 lg:px-4 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em]">Document</th>
+                <th className="px-3 lg:px-4 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em]">Type</th>
+                <th className="px-3 lg:px-4 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em]">Année / Filière</th>
+                <th className="px-3 lg:px-4 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em]">Créé le</th>
+                <th className="px-3 lg:px-4 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em] text-center">Statut</th>
+                <th className="px-3 lg:px-4 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
@@ -216,13 +236,13 @@ export const DocumentsList = ({ onViewPv }) => {
                       transition={{ delay: idx * 0.04 }}
                       className="hover:bg-surface-container-low/30 transition-colors group cursor-default"
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary border border-outline-variant/20">
-                            <FileText size={20} />
+                      <td className="px-3 lg:px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary border border-outline-variant/20 flex-shrink-0">
+                            <FileText size={16} />
                           </div>
-                          <div>
-                            <p className="text-sm font-black text-primary tracking-tight max-w-[200px] truncate">{docTitle(doc)}</p>
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-primary tracking-tight max-w-[150px] truncate">{docTitle(doc)}</p>
                             <p className="text-[10px] font-bold text-secondary uppercase tracking-tighter">
                               REF: #{doc.id}
                               {doc.files_count > 0 && (
@@ -232,28 +252,28 @@ export const DocumentsList = ({ onViewPv }) => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 lg:px-4 py-4">
                         <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${type.cls}`}>
                           {type.label}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm font-bold text-on-surface">{doc.academic_year ?? doc.semester ?? '—'}</p>
-                        <p className="text-[11px] font-medium text-secondary truncate max-w-[140px]">
+                      <td className="px-3 lg:px-4 py-4">
+                        <p className="text-sm font-bold text-on-surface truncate max-w-[120px]">{doc.academic_year ?? doc.semester ?? '—'}</p>
+                        <p className="text-[11px] font-medium text-secondary truncate max-w-[120px]">
                           {doc.filiere ?? doc.module ?? '—'}
                         </p>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 lg:px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1.5 text-secondary">
                           <Clock size={14} />
                           <span className="text-xs font-semibold">{fmtDate(doc.created_at)}</span>
                         </div>
                         <p className="text-[10px] text-outline font-medium mt-0.5">{doc.creator?.name ?? '—'}</p>
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-3 lg:px-4 py-4 text-center">
                         <StatusBadge status={doc.status} />
                       </td>
-                      <td className="px-3 sm:px-6 py-4 text-right">
+                      <td className="px-3 lg:px-4 py-4 text-right">
                         <div className="flex justify-end items-center gap-1">
                           <button
                             onClick={() => onViewPv?.(doc.id)}
@@ -301,8 +321,8 @@ export const DocumentsList = ({ onViewPv }) => {
                   key={p}
                   onClick={() => setCurrentPage(p)}
                   className={`w-8 h-8 flex items-center justify-center rounded text-[11px] font-black transition-all ${p === currentPage
-                      ? 'bg-primary text-white shadow-md'
-                      : 'border border-outline-variant hover:bg-surface-container-low text-secondary'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'border border-outline-variant hover:bg-surface-container-low text-secondary'
                     }`}
                 >
                   {p}

@@ -334,8 +334,9 @@ export const UserManagement = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-2xl border border-outline-variant shadow-lg overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white rounded-2xl border border-outline-variant shadow-lg overflow-hidden min-w-0">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container-low/50 border-b border-outline-variant/30">
                 <th className="px-6 py-5 text-[10px] font-black uppercase text-secondary tracking-[0.2em]">Utilisateur</th>
@@ -418,6 +419,7 @@ export const UserManagement = () => {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </>

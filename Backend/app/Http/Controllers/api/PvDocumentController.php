@@ -29,7 +29,7 @@ class PvDocumentController extends Controller
         }
         if ($request->filled('status')) {
             $statuses = $request->status;
-            if (! is_array($statuses)) {
+            if (!is_array($statuses)) {
                 $statuses = explode(',', $statuses);
             }
             $query->whereIn('status', $statuses);
@@ -58,15 +58,15 @@ class PvDocumentController extends Controller
             $term = $request->search;
             $query->where(function ($q) use ($term) {
                 $q->where('filiere', 'like', "%{$term}%")
-                  ->orWhere('module',  'like', "%{$term}%")
-                  ->orWhere('groupe',  'like', "%{$term}%")
-                  ->orWhere('niveau',  'like', "%{$term}%");
+                    ->orWhere('module', 'like', "%{$term}%")
+                    ->orWhere('groupe', 'like', "%{$term}%")
+                    ->orWhere('niveau', 'like', "%{$term}%");
             });
         }
 
         // ── Sorting ────────────────────────────────────────────────
         $allowedSorts = ['created_at', 'academic_year', 'status', 'type'];
-        $sortColumn   = in_array($request->get('sort'), $allowedSorts)
+        $sortColumn = in_array($request->get('sort'), $allowedSorts)
             ? $request->get('sort')
             : 'created_at';
         $sortDir = $request->get('direction') === 'asc' ? 'asc' : 'desc';
@@ -93,7 +93,7 @@ class PvDocumentController extends Controller
         $group = TrainingGroup::findOrFail($request->training_group_id);
 
         $duration = $filiere->duration ?? 2; // Default to 2
-        
+
         $yearLevel = 1;
         if (preg_match('/([1-3])\d{2}$/', $group->code, $matches)) {
             $yearLevel = (int) $matches[1];
@@ -137,7 +137,7 @@ class PvDocumentController extends Controller
         $document = PvDocument::create([
             ...$validated,
             'created_by' => auth()->id(),
-            'status'     => 'BROUILLON',
+            'status' => 'BROUILLON',
         ]);
 
         ActivityLog::record('CREATE', $document, $this->label($document));
@@ -175,7 +175,7 @@ class PvDocumentController extends Controller
 
         return response()->json([
             'document' => $pvDocument,
-            'history'  => $history,
+            'history' => $history,
         ]);
     }
 
@@ -185,7 +185,7 @@ class PvDocumentController extends Controller
      */
     public function update(Request $request, PvDocument $pvDocument): JsonResponse
     {
-        if (! in_array($pvDocument->status, ['BROUILLON', 'EN_ATTENTE'])) {
+        if (!in_array($pvDocument->status, ['BROUILLON', 'EN_ATTENTE'])) {
             return response()->json([
                 'message' => 'Ce document ne peut plus être modifié (statut : ' . $pvDocument->status . ').',
             ], 422);
@@ -198,8 +198,8 @@ class PvDocumentController extends Controller
 
         ActivityLog::record('UPDATE', $pvDocument, $this->label($pvDocument), [
             'changed_fields' => array_keys($validated),
-            'old_status'     => $oldStatus,
-            'new_status'     => $pvDocument->fresh()->status,
+            'old_status' => $oldStatus,
+            'new_status' => $pvDocument->fresh()->status,
         ]);
 
         return response()->json($pvDocument->load('creator:id,name'));
@@ -212,14 +212,21 @@ class PvDocumentController extends Controller
     public function updateStatus(Request $request, PvDocument $pvDocument): JsonResponse
     {
         $request->validate([
-            'status' => ['required', Rule::in([
-                'BROUILLON', 'EN_ATTENTE', 'VALIDE_PAPIER', 'ARCHIVE_NUMERIQUE', 'ARCHIVE_COMPLET',
-            ])],
+            'status' => [
+                'required',
+                Rule::in([
+                    'BROUILLON',
+                    'EN_ATTENTE',
+                    'VALIDE_PAPIER',
+                    'ARCHIVE_NUMERIQUE',
+                    'ARCHIVE_COMPLET',
+                ])
+            ],
         ]);
 
         $oldStatus = $pvDocument->status;
         $pvDocument->update([
-            'status'       => $request->status,
+            'status' => $request->status,
             'validated_by' => auth()->id(),
             'validated_at' => now(),
         ]);
@@ -230,11 +237,11 @@ class PvDocumentController extends Controller
         ]);
 
         $statusLabels = [
-            'EN_ATTENTE'       => 'En attente de validation',
-            'VALIDE_PAPIER'    => 'Validé (papier)',
-            'ARCHIVE_NUMERIQUE'=> 'Archivé numériquement',
-            'ARCHIVE_COMPLET'  => 'Archivage complet',
-            'BROUILLON'        => 'Brouillon',
+            'EN_ATTENTE' => 'En attente de validation',
+            'VALIDE_PAPIER' => 'Validé (papier)',
+            'ARCHIVE_NUMERIQUE' => 'Archivé numériquement',
+            'ARCHIVE_COMPLET' => 'Archivage complet',
+            'BROUILLON' => 'Brouillon',
         ];
         NotificationController::notifyManagers(
             'status_changed',
@@ -282,10 +289,10 @@ class PvDocumentController extends Controller
             ->get();
 
         return response()->json([
-            'total'     => $total,
-            'by_type'   => $byType,
+            'total' => $total,
+            'by_type' => $byType,
             'by_status' => $byStatus,
-            'monthly'   => $monthly,
+            'monthly' => $monthly,
         ]);
     }
 
@@ -300,28 +307,28 @@ class PvDocumentController extends Controller
 
         $common = [
             'physical_location' => ['nullable', 'string', 'max:100'],
-            'notes'             => ['nullable', 'string'],
-            'academic_year'     => [$required, 'string', 'max:20'],
-            'niveau'            => [$required, 'string', 'max:50'],
-            'filiere'           => [$required, 'string', 'max:100'],
-            'groupe'            => [$required, 'string', 'max:20'],
-            'academic_year_id'  => ['nullable', 'exists:academic_years,id'],
-            'filiere_id'        => ['nullable', 'exists:filieres,id'],
+            'notes' => ['nullable', 'string'],
+            'academic_year' => [$required, 'string', 'max:20'],
+            'niveau' => [$required, 'string', 'max:50'],
+            'filiere' => [$required, 'string', 'max:100'],
+            'groupe' => [$required, 'string', 'max:20'],
+            'academic_year_id' => ['nullable', 'exists:academic_years,id'],
+            'filiere_id' => ['nullable', 'exists:filieres,id'],
             'training_group_id' => ['nullable', 'exists:training_groups,id'],
         ];
 
         return match ($type) {
             'PV_FF' => [
                 ...$common,
-                'type'              => [$required, Rule::in(['PV_FF'])],
+                'type' => [$required, Rule::in(['PV_FF'])],
             ],
             'PV_PASSAGE' => [
                 ...$common,
-                'type'     => [$required, Rule::in(['PV_PASSAGE'])],
+                'type' => [$required, Rule::in(['PV_PASSAGE'])],
             ],
             'PV_INTERMEDIAIRE' => [
                 ...$common,
-                'type'     => [$required, Rule::in(['PV_INTERMEDIAIRE'])],
+                'type' => [$required, Rule::in(['PV_INTERMEDIAIRE'])],
             ],
             default => [],
         };

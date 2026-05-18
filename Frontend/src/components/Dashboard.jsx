@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FileBox, CheckCircle, AlertTriangle,
   FileText, Plus, Download, Clock,
-  Edit3, Trash2, Eye, Upload, LogIn,
+  Edit3, Trash2, Eye, Upload, LogIn, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import api from '../services/api';
@@ -81,9 +81,8 @@ export const Dashboard = ({ onNavigate, user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // Pagination state for recent activities
   const [recentPage, setRecentPage] = useState(1);
-  const RECENT_PER_PAGE = 5;
+  const recentPerPage = 5;
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -111,7 +110,10 @@ export const Dashboard = ({ onNavigate, user }) => {
       : '0%'
     : null;
 
+  const totalRecentPages = Math.ceil(recent.length / recentPerPage);
+  const currentRecent = recent.slice((recentPage - 1) * recentPerPage, recentPage * recentPerPage);
 
+  const canAddPv = ['admin', 'gestionnaire', 'archiviste'].includes(user?.role);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -167,7 +169,7 @@ export const Dashboard = ({ onNavigate, user }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-8 min-w-0">
 
           {/* Annual Activity Chart */}
           <div className="bg-white p-6 rounded-xl border border-outline-variant shadow-sm">
@@ -204,7 +206,7 @@ export const Dashboard = ({ onNavigate, user }) => {
             ) : (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  {recent.slice((recentPage - 1) * RECENT_PER_PAGE, recentPage * RECENT_PER_PAGE).map((log, idx) => {
+                  {currentRecent.map((log, idx) => {
                     const mapped = ACTION_MAP[log.action] ?? { label: log.action, icon: FileText, color: 'bg-outline' };
                     const Icon = mapped.icon;
                     return (
@@ -229,25 +231,24 @@ export const Dashboard = ({ onNavigate, user }) => {
                     );
                   })}
                 </div>
-                {/* Pagination Controls */}
-                {recent.length > RECENT_PER_PAGE && (
-                  <div className="flex items-center justify-between pt-4 border-t border-outline-variant/30">
-                    <button
+                {totalRecentPages > 1 && (
+                  <div className="flex justify-between items-center pt-4 border-t border-outline-variant/30">
+                    <button 
                       onClick={() => setRecentPage(p => Math.max(1, p - 1))}
                       disabled={recentPage === 1}
-                      className="px-3 py-1.5 text-xs font-bold text-secondary border border-outline-variant rounded-lg hover:bg-surface-container-low disabled:opacity-30 transition-all"
+                      className="p-1.5 text-secondary hover:text-primary disabled:opacity-30 transition-colors"
                     >
-                      Précédent
+                      <ChevronLeft size={18} />
                     </button>
-                    <span className="text-[10px] font-black text-secondary tracking-widest">
-                      {recentPage} / {Math.ceil(recent.length / RECENT_PER_PAGE)}
+                    <span className="text-[10px] font-black uppercase tracking-widest text-secondary">
+                      {recentPage} / {totalRecentPages}
                     </span>
-                    <button
-                      onClick={() => setRecentPage(p => Math.min(Math.ceil(recent.length / RECENT_PER_PAGE), p + 1))}
-                      disabled={recentPage === Math.ceil(recent.length / RECENT_PER_PAGE)}
-                      className="px-3 py-1.5 text-xs font-bold text-secondary border border-outline-variant rounded-lg hover:bg-surface-container-low disabled:opacity-30 transition-all"
+                    <button 
+                      onClick={() => setRecentPage(p => Math.min(totalRecentPages, p + 1))}
+                      disabled={recentPage === totalRecentPages}
+                      className="p-1.5 text-secondary hover:text-primary disabled:opacity-30 transition-colors"
                     >
-                      Suivant
+                      <ChevronRight size={18} />
                     </button>
                   </div>
                 )}
@@ -257,7 +258,7 @@ export const Dashboard = ({ onNavigate, user }) => {
         </div>
 
         {/* Side Panel */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-4 space-y-8 min-w-0">
 
           {/* Archiving rate */}
           <div className="bg-primary text-white p-6 rounded-xl shadow-lg">
@@ -300,6 +301,7 @@ export const Dashboard = ({ onNavigate, user }) => {
               })
             )}
           </div>
+
 
         </div>
       </div>

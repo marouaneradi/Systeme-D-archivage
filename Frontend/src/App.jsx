@@ -4,6 +4,7 @@ import { useSessionTimeout } from './hooks/useSessionTimeout';
 import { Sidebar, TopBar } from './components/Navigation';
 import { Dashboard } from './components/Dashboard';
 import { DocumentsList } from './components/DocumentsList';
+import { DocumentsExplorer } from './components/DocumentsExplorer';
 import { AddPV } from './components/AddPV';
 import { AdvancedSearch } from './components/AdvancedSearch';
 import { ActivityLog } from './components/ActivityLog';
@@ -15,12 +16,13 @@ import Login from './components/Login';
 import { AnimatePresence, motion } from 'motion/react';
 
 export default function App() {
-  const [user, setUser]               = useState(null);
-  const [authLoading, setAuthLoading]  = useState(true);
-  const [activePage, setActivePage]    = useState('dashboard');
-  const [selectedPvId, setSelectedPvId]= useState(null);
-  const [sidebarOpen, setSidebarOpen]  = useState(false); // mobile drawer
-  const [isDesktopSidebarOpen, setDesktopSidebarOpen] = useState(true); // desktop sidebar
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [activePage, setActivePage] = useState('dashboard');
+  const [selectedPvId, setSelectedPvId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [docFilter, setDocFilter] = useState({ yearId: null, type: null, yearLabel: null, niveau: null });
 
   // ── On mount: verify token via /auth/me ──────────────────────────
   useEffect(() => {
@@ -61,8 +63,13 @@ export default function App() {
   // ── Session timeout management ───────────────────────────────────
   useSessionTimeout(user, handleLogout, 15); // 15 minutes timeout
 
-  const openPvDetail  = (pvId) => { setSelectedPvId(pvId); setActivePage('pv-detail'); };
-  const closePvDetail = ()     => { setSelectedPvId(null); setActivePage('documents'); };
+  const openPvDetail = (pvId) => { setSelectedPvId(pvId); setActivePage('pv-detail'); };
+  const closePvDetail = () => { setSelectedPvId(null); setActivePage('documents'); };
+
+  const navigateDocuments = (filter = {}) => {
+    setDocFilter(filter);
+    setActivePage('documents');
+  };
 
   // ── Loading screen while verifying token ─────────────────────────
   if (authLoading) {
@@ -85,7 +92,7 @@ export default function App() {
   const canAccess = (page) => {
     const role = user.role;
     const restricted = {
-      users:    ['admin'],
+      users: ['admin'],
       training: ['admin', 'gestionnaire'],
       activity: ['admin', 'gestionnaire'],
       settings: ['admin'],
@@ -112,15 +119,15 @@ export default function App() {
 
     switch (activePage) {
       case 'dashboard': return <Dashboard onNavigate={setActivePage} user={user} />;
-      case 'documents': return <DocumentsList onViewPv={openPvDetail} />;
-      case 'add':       return <AddPV onNavigate={setActivePage} />;
-      case 'training':  return <TrainingImport onNavigate={setActivePage} user={user} />;
-      case 'search':    return <AdvancedSearch onViewPv={openPvDetail} />;
-      case 'activity':  return <ActivityLog />;
-      case 'pv-detail': return <PvDetail pvId={selectedPvId} onBack={closePvDetail} onViewPv={openPvDetail} user={user} />;
-      case 'users':     return <UserManagement />;
-      case 'settings':  return <Settings />;
-      default:          return <Dashboard />;
+      case 'documents': return <DocumentsList onViewPv={openPvDetail} yearId={docFilter.yearId} pvType={docFilter.type} yearLabel={docFilter.yearLabel} niveau={docFilter.niveau} />;
+      case 'add': return <AddPV onNavigate={setActivePage} />;
+      case 'training': return <TrainingImport onNavigate={setActivePage} user={user} />;
+      case 'search': return <AdvancedSearch onViewPv={openPvDetail} />;
+      case 'activity': return <ActivityLog />;
+      case 'pv-detail': return <PvDetail pvId={selectedPvId} onBack={closePvDetail} onViewPv={openPvDetail} />;
+      case 'users': return <UserManagement />;
+      case 'settings': return <Settings />;
+      default: return <Dashboard />;
     }
   };
 
@@ -128,13 +135,13 @@ export default function App() {
     const labels = {
       dashboard: 'Tableau de bord',
       documents: 'Documents PV',
-      add:       'Nouvel Ajout',
-      training:  'Nouvelle Promotion',
-      search:    'Recherche Avancée',
-      activity:  "Journal d'activité",
+      add: 'Nouvel Ajout',
+      training: 'Nouvelle Promotion',
+      search: 'Recherche Avancée',
+      activity: "Journal d'activité",
       'pv-detail': 'Détail du document',
-      users:     'Gestion des utilisateurs',
-      settings:  'Paramètres',
+      users: 'Gestion des utilisateurs',
+      settings: 'Paramètres',
     };
     return labels[activePage] || '';
   };
@@ -148,22 +155,23 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex">
+    <div className="min-h-screen bg-surface w-full">
       <Sidebar
-          activePage={activePage}
-          onPageChange={setActivePage}
-          user={user}
-          onLogout={handleLogout}
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          isDesktopOpen={isDesktopSidebarOpen}
-          onToggleDesktop={() => setDesktopSidebarOpen(!isDesktopSidebarOpen)}
-        />
+        activePage={activePage}
+        onPageChange={setActivePage}
+        user={user}
+        onLogout={handleLogout}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isDesktopOpen={isDesktopSidebarOpen}
+        onToggleDesktop={() => setDesktopSidebarOpen(!isDesktopSidebarOpen)}
+        onNavigateDocuments={navigateDocuments}
+      />
 
-      <main className={`flex-1 min-h-screen flex flex-col transition-all duration-300 ${isDesktopSidebarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'}`}>
+      <div className={`min-h-screen flex flex-col transition-all duration-300 ${isDesktopSidebarOpen ? 'lg:pl-[260px]' : ''}`}>
         <TopBar activePage={activePage} activeLabel={getPageLabel()} user={user} onLogout={handleLogout} onNavigate={openPvDetail} onMenuToggle={handleMenuToggle} />
 
-        <div className="p-4 sm:p-6 lg:p-10 xl:p-12 max-w-[1440px] mx-auto w-full flex-1">
+        <main className="flex-1 w-full max-w-[1440px] mx-auto p-4 sm:p-6 lg:p-8 xl:p-10 min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activePage}
@@ -175,7 +183,7 @@ export default function App() {
               {renderPage()}
             </motion.div>
           </AnimatePresence>
-        </div>
+        </main>
 
         <footer className="px-12 py-6 border-t border-outline-variant/20 flex justify-between items-center bg-white/50">
           <p className="text-[10px] font-bold text-secondary uppercase tracking-widest italic">
@@ -186,7 +194,7 @@ export default function App() {
             <button className="text-[10px] font-black text-secondary hover:text-primary transition-colors uppercase tracking-widest">Documentation</button>
           </div>
         </footer>
-      </main>
+      </div>
     </div>
   );
 }

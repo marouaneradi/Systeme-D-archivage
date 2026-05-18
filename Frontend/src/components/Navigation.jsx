@@ -5,7 +5,8 @@ import {
   BarChart3, FileText, PlusCircle, Search,
   History, Settings, Menu, Bell, LogOut, User,
   AlertTriangle, CheckCircle2, Clock, Info, X,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, ChevronDown, Calendar, BookOpen,
+  ClipboardList, FileBox, GraduationCap,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../services/api';
@@ -174,10 +175,134 @@ const NotificationBell = ({ onNavigate }) => {
   );
 };
 
+// ── PV Accordion (3-level) ───────────────────────────────────────
+const PV_TYPE_INFO = [
+  { id: 'PV_PASSAGE', label: 'PV Passage', icon: BookOpen },
+  { id: 'PV_INTERMEDIAIRE', label: 'PV Intermédiaire', icon: ClipboardList },
+  { id: 'PV_FF', label: 'PV Fin Formation', icon: FileBox }
+];
+
+const YEAR_LEVELS = [
+  { key: '1', label: '1ère année' },
+  { key: '2', label: '2ème année' },
+  { key: '3', label: '3ème année' }
+];
+
+const DocsAccordion = ({ onNavigate, activePage, currentFilter }) => {
+  const [years, setYears] = useState([]);
+  const [openYear, setOpenYear] = useState(null);
+  const [openLevel, setOpenLevel] = useState(null);
+
+  useEffect(() => {
+    api.get('/training/academic-years')
+      .then(({ data }) => setYears(data))
+      .catch(() => setYears([]));
+  }, []);
+
+  const go = (filter) => onNavigate(filter);
+
+  return (
+    <motion.div
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: 'auto', opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.22, ease: 'easeInOut' }}
+      className="overflow-hidden"
+    >
+      <div className="mt-1 ml-3 border-l-2 border-white/10 pl-2 space-y-0.5 pb-2">
+        <button
+          onClick={() => go({})}
+          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            activePage === 'documents' && !currentFilter?.yearId
+              ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10'
+              : 'text-white/60 hover:bg-white/10 hover:text-white'
+          }`}
+        >
+          <FileText size={12} className="flex-shrink-0" />
+          Tous les documents
+        </button>
+
+        {years.map((year) => {
+          const isYearOpen = openYear === year.id;
+          const isYearActive = currentFilter?.yearId === year.id && !currentFilter?.niveau;
+          
+          return (
+            <div key={year.id}>
+              <button
+                onClick={() => { setOpenYear(prev => prev === year.id ? null : year.id); go({ yearId: year.id, yearLabel: year.label }); }}
+                className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  isYearActive ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Calendar size={11} className={`flex-shrink-0 ${isYearActive ? 'text-blue-400' : 'text-white/40'}`} />
+                <span className="flex-1 text-left truncate">{year.label}</span>
+                <ChevronDown size={11} className={`flex-shrink-0 text-white/40 transition-transform duration-200 ${isYearOpen ? 'rotate-0' : '-rotate-90'}`} />
+              </button>
+
+              <AnimatePresence initial={false}>
+                {isYearOpen && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                    <div className="ml-3 border-l border-white/10 pl-2 mt-0.5 space-y-0.5 pb-1">
+                      {YEAR_LEVELS.map(level => {
+                        const lk = `${year.id}-${level.key}`;
+                        const isLvlOpen = openLevel === lk;
+                        const isLvlActive = currentFilter?.yearId === year.id && currentFilter?.niveau === level.key && !currentFilter?.type;
+
+                        return (
+                          <div key={level.key}>
+                            <button
+                              onClick={() => { setOpenLevel(prev => prev === lk ? null : lk); go({ yearId: year.id, yearLabel: year.label, niveau: level.key }); }}
+                              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                                isLvlActive ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                              }`}
+                            >
+                              <GraduationCap size={10} className={`flex-shrink-0 ${isLvlActive ? 'text-blue-400' : 'text-white/40'}`} />
+                              <span className="flex-1 text-left">{level.label}</span>
+                              <ChevronDown size={10} className={`flex-shrink-0 text-white/40 transition-transform duration-200 ${isLvlOpen ? 'rotate-0' : '-rotate-90'}`} />
+                            </button>
+
+                            <AnimatePresence initial={false}>
+                              {isLvlOpen && (
+                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                                  <div className="ml-3 border-l border-white/10 pl-2 mt-0.5 space-y-0.5 pb-1">
+                                    {PV_TYPE_INFO.map(type => {
+                                      const isTypeActive = currentFilter?.yearId === year.id && currentFilter?.niveau === level.key && currentFilter?.type === type.id;
+                                      return (
+                                        <button
+                                          key={type.id}
+                                          onClick={() => go({ yearId: year.id, yearLabel: year.label, niveau: level.key, type: type.id })}
+                                          className={`w-full flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                                            isTypeActive ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                                          }`}
+                                        >
+                                          <type.icon size={10} className={`flex-shrink-0 ${isTypeActive ? 'text-blue-400' : 'text-white/40'}`} />
+                                          <span className="flex-1 text-left truncate">{type.label}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+};
+
 // ── Sidebar menu items ────────────────────────────────────────────
 const ALL_MENU_ITEMS = [
   { id: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
-  { id: 'documents', label: 'Documents PV', icon: FileText },
+  { id: 'documents', label: 'Documents PV', icon: FileText, hasAccordion: true },
   { id: 'add', label: 'Nouvel Ajout', icon: PlusCircle, allowedRoles: ['admin', 'gestionnaire', 'archiviste'] },
   { id: 'training', label: 'Nouvelle Promotion', icon: PlusCircle, allowedRoles: ['admin', 'gestionnaire'] },
   { id: 'search', label: 'Recherche Avancée', icon: Search },
@@ -189,8 +314,10 @@ const ALL_MENU_ITEMS = [
 // ── Sidebar ───────────────────────────────────────────────────────
 // `open`    — controlled by parent (mobile drawer state)
 // `onClose` — called when drawer should close (mobile)
-export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClose, isDesktopOpen, onToggleDesktop }) => {
+export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClose, isDesktopOpen, onToggleDesktop, onNavigateDocuments }) => {
   const role = user?.role;
+  const [docsOpen, setDocsOpen] = useState(activePage === 'documents');
+  const [docFilter, setDocFilter] = useState({});
 
   const menuItems = ALL_MENU_ITEMS.filter(
     (item) => !item.allowedRoles || item.allowedRoles.includes(role)
@@ -205,55 +332,115 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
     onClose?.(); // auto-close drawer on mobile
   };
 
+  const handleDocNavigate = (filter) => {
+    setDocFilter(filter);
+    onNavigateDocuments?.(filter);
+    setDocsOpen(true);
+    onClose?.();
+  };
+
   // Sidebar inner content (shared between desktop fixed & mobile drawer)
   const sidebarContent = (
     <div 
-      className="flex flex-col h-full text-slate-900 bg-cover bg-center"
+      className="flex flex-col h-full bg-cover bg-center relative text-white"
       style={{ backgroundImage: `url(${navback})` }}
     >
-      {/* Logo + close button (mobile) */}
-      <div className="px-6 mb-8 flex items-center justify-between gap-3 pt-4">
-        <div className="flex items-center gap-3">
-          <img src={ofpptMiniLogo} alt="OFPPT Logo" className="w-10 h-10 object-contain drop-shadow-sm" />
-          <div>
-            <p className="text-lg font-black text-slate-900 leading-none tracking-tight">Système PV</p>
-            <p className="text-[10px] text-slate-500 font-bold mt-1 uppercase tracking-widest">Archivage</p>
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-slate-900/90 z-0"></div>
+
+      {/* Content wrapper with z-10 */}
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Logo + close button (mobile) */}
+        <div className="px-6 mb-8 flex items-center justify-between gap-3 pt-6">
+          <div className="flex items-center gap-3">
+            <img src={ofpptMiniLogo} alt="OFPPT Logo" className="w-10 h-10 object-contain drop-shadow-lg" />
+            <div>
+              <p className="text-lg font-black text-white leading-none tracking-tight">Système PV</p>
+              <p className="text-[10px] text-blue-300 font-bold mt-1 uppercase tracking-widest drop-shadow-md">Archivage</p>
+            </div>
+          </div>
+          {/* Close button — only visible on mobile */}
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1.5 rounded-full hover:bg-white/10 text-white/60 transition-colors"
+            aria-label="Fermer le menu"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 px-3 space-y-2 overflow-y-auto custom-scrollbar">
+          {menuItems.map((item) => {
+            const isActive = activePage === item.id;
+            const hasAccordion = item.hasAccordion;
+
+            const btnBase = `w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 relative group overflow-hidden`;
+            const btnActive = `bg-white/15 text-white shadow-[0_2px_10px_-4px_rgba(0,0,0,0.5)] ring-1 ring-white/10`;
+            const btnIdle = `text-white/60 hover:bg-white/10 hover:text-white`;
+
+            if (hasAccordion) {
+              return (
+                <div key={item.id}>
+                  <button
+                    onClick={() => {
+                      setDocsOpen(v => !v);
+                      handleNav(item.id);
+                      setDocFilter({});
+                      onNavigateDocuments?.({});
+                    }}
+                    className={`${btnBase} ${isActive ? btnActive : btnIdle}`}
+                  >
+                    {isActive && <motion.div layoutId="activeBar" className="absolute left-0 top-2 bottom-2 w-1 bg-blue-400 rounded-r-full" />}
+                    <item.icon size={20} className={`transition-colors duration-300 z-10 ${isActive ? 'text-blue-400' : 'text-white/40 group-hover:text-white/80'}`} />
+                    <span className="z-10 flex-1 text-left">{item.label}</span>
+                    <ChevronDown size={16} className={`transition-transform duration-300 ${docsOpen ? 'rotate-0 text-white' : '-rotate-90 text-white/40'}`} />
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {docsOpen && (
+                      <DocsAccordion onNavigate={handleDocNavigate} activePage={activePage} currentFilter={docFilter} />
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            }
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNav(item.id)}
+                className={`${btnBase} ${isActive ? btnActive : btnIdle}`}
+              >
+                {isActive && (
+                  <motion.div layoutId="activeBar" className="absolute left-0 top-2 bottom-2 w-1 bg-blue-400 rounded-r-full" />
+                )}
+                <item.icon size={20} className={`transition-colors duration-300 z-10 ${isActive ? 'text-blue-400' : 'text-white/40 group-hover:text-white/80'}`} />
+                <span className="z-10">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* User info + logout */}
+        <div className="mt-auto px-4 py-4 border-t border-white/10 space-y-3 bg-black/10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-black flex-shrink-0 shadow-lg shadow-blue-500/30">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white truncate">{user?.name ?? 'Utilisateur'}</p>
+              <p className="text-[10px] text-blue-200 truncate">{ROLE_LABELS[role] ?? role}</p>
+            </div>
+            <button
+              onClick={onLogout}
+              title="Se déconnecter"
+              className="p-2 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+            >
+              <LogOut size={18} />
+            </button>
           </div>
         </div>
-        {/* Close button — only visible on mobile */}
-        <button
-          onClick={onClose}
-          className="lg:hidden p-1.5 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
-          aria-label="Fermer le menu"
-        >
-          <X size={18} />
-        </button>
       </div>
-
-      {/* Nav */}
-      <nav className="flex-1 px-3 space-y-2 overflow-y-auto">
-        {menuItems.map((item) => {
-          const isActive = activePage === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleNav(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 relative group overflow-hidden ${isActive
-                  ? 'bg-blue-50/80 text-blue-700 shadow-[0_2px_10px_-4px_rgba(37,99,235,0.3)]'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-            >
-              {isActive && (
-                <motion.div layoutId="activeBar" className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-full" />
-              )}
-              <item.icon size={20} className={`transition-colors duration-300 z-10 ${isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
-              <span className="z-10">{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Empty space at bottom to push nav up if needed, or just let nav expand */}
     </div>
   );
 

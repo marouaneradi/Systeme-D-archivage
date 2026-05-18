@@ -477,8 +477,8 @@ export const AdvancedSearch = ({ onViewPv }) => {
             <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-semibold">{error}</div>
           )}
 
-          <div className="bg-white border border-outline-variant rounded-2xl shadow-lg overflow-hidden">
-            <div className="overflow-x-auto">
+          <div className="bg-white border border-outline-variant rounded-2xl shadow-lg overflow-hidden min-w-0">
+            <div className="overflow-x-auto w-full">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-surface-container-low/30 border-b border-outline-variant/30">
                   <tr>
