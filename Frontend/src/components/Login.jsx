@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ofpptMiniLogo from '../assets/OFPPT-Mini-Logo.png';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -10,6 +10,15 @@ export default function Login({ onLogin }) {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('remembered_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,6 +32,12 @@ export default function Login({ onLogin }) {
     setLoading(true);
     try {
       const { data } = await authService.login(email, password);
+
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', email);
+      } else {
+        localStorage.removeItem('remembered_email');
+      }
 
       // Persist token and user in localStorage
       localStorage.setItem('auth_token', data.token);
@@ -155,12 +170,6 @@ export default function Login({ onLogin }) {
                 <label className="text-[10px] font-black text-secondary uppercase tracking-widest">
                   Mot de passe
                 </label>
-                <button
-                  type="button"
-                  className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest"
-                >
-                  Mot de passe oublié ?
-                </button>
               </div>
               <div className="relative">
                 <input
@@ -180,6 +189,25 @@ export default function Login({ onLogin }) {
                   {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+            </div>
+
+            {/* Options */}
+            <div className="flex items-center justify-between mt-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-outline-variant/50 text-primary focus:ring-primary accent-primary"
+                />
+                <span className="text-sm font-semibold text-secondary">Se souvenir de moi</span>
+              </label>
+              <button
+                type="button"
+                className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest"
+              >
+                Mot de passe oublié ?
+              </button>
             </div>
 
             {/* Submit */}

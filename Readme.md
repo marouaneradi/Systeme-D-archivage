@@ -272,7 +272,7 @@ Systeme-D-archivage/
 
 ## 📦 Fonctionnalités
 
-- ✅ Authentification sécurisée (Sanctum + token)
+- ✅ Authentification sécurisée (Sanctum + token) avec option "Se souvenir de moi"
 - ✅ Gestion des rôles (4 rôles)
 - ✅ CRUD complet des PV (FF, CC, EFM)
 - ✅ Relations parent-enfant (PV-FF → CC/EFM)
@@ -284,6 +284,27 @@ Systeme-D-archivage/
 - ✅ Journal d'activité complet
 - ✅ Dashboard avec statistiques réelles
 - ✅ Gestion des utilisateurs (admin)
+- ✅ Envoi d'email automatique (SMTP) lors de la création de comptes
+- ✅ Interface utilisateur repensée et dynamisée (Menu de navigation, Header)
+
+---
+
+## 📧 Configuration de l'envoi d'emails (SMTP)
+
+L'application envoie automatiquement un email contenant les accès lorsqu'un administrateur crée un nouvel utilisateur. Pour que cela fonctionne en local ou en production, mettez à jour votre fichier `Backend/.env` :
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME="votre_adresse@gmail.com"
+MAIL_PASSWORD="votre_mot_de_passe_application_google"
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS="votre_adresse@gmail.com"
+MAIL_FROM_NAME="Système D'archivage"
+```
+
+> **Important (Gmail) :** Vous ne pouvez pas utiliser votre mot de passe Gmail normal. Vous devez activer la validation en deux étapes sur votre compte Google, puis créer un "Mot de passe d'application" (16 caractères) et le coller dans `MAIL_PASSWORD`.
 
 ---
 

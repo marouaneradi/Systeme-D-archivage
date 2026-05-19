@@ -212,11 +212,10 @@ const DocsAccordion = ({ onNavigate, activePage, currentFilter }) => {
       <div className="mt-1 ml-3 border-l-2 border-white/10 pl-2 space-y-0.5 pb-2">
         <button
           onClick={() => go({})}
-          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-            activePage === 'documents' && !currentFilter?.yearId
+          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activePage === 'documents' && !currentFilter?.yearId
               ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10'
               : 'text-white/60 hover:bg-white/10 hover:text-white'
-          }`}
+            }`}
         >
           <FileText size={12} className="flex-shrink-0" />
           Tous les documents
@@ -225,14 +224,13 @@ const DocsAccordion = ({ onNavigate, activePage, currentFilter }) => {
         {years.map((year) => {
           const isYearOpen = openYear === year.id;
           const isYearActive = currentFilter?.yearId === year.id && !currentFilter?.niveau;
-          
+
           return (
             <div key={year.id}>
               <button
                 onClick={() => { setOpenYear(prev => prev === year.id ? null : year.id); go({ yearId: year.id, yearLabel: year.label }); }}
-                className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  isYearActive ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10' : 'text-white/60 hover:bg-white/10 hover:text-white'
-                }`}
+                className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${isYearActive ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  }`}
               >
                 <Calendar size={11} className={`flex-shrink-0 ${isYearActive ? 'text-blue-400' : 'text-white/40'}`} />
                 <span className="flex-1 text-left truncate">{year.label}</span>
@@ -252,9 +250,8 @@ const DocsAccordion = ({ onNavigate, activePage, currentFilter }) => {
                           <div key={level.key}>
                             <button
                               onClick={() => { setOpenLevel(prev => prev === lk ? null : lk); go({ yearId: year.id, yearLabel: year.label, niveau: level.key }); }}
-                              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
-                                isLvlActive ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10' : 'text-white/60 hover:bg-white/10 hover:text-white'
-                              }`}
+                              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${isLvlActive ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                                }`}
                             >
                               <GraduationCap size={10} className={`flex-shrink-0 ${isLvlActive ? 'text-blue-400' : 'text-white/40'}`} />
                               <span className="flex-1 text-left">{level.label}</span>
@@ -271,9 +268,8 @@ const DocsAccordion = ({ onNavigate, activePage, currentFilter }) => {
                                         <button
                                           key={type.id}
                                           onClick={() => go({ yearId: year.id, yearLabel: year.label, niveau: level.key, type: type.id })}
-                                          className={`w-full flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all ${
-                                            isTypeActive ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10' : 'text-white/60 hover:bg-white/10 hover:text-white'
-                                          }`}
+                                          className={`w-full flex items-center gap-2 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all ${isTypeActive ? 'bg-white/15 text-white shadow-sm ring-1 ring-white/10' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                                            }`}
                                         >
                                           <type.icon size={10} className={`flex-shrink-0 ${isTypeActive ? 'text-blue-400' : 'text-white/40'}`} />
                                           <span className="flex-1 text-left truncate">{type.label}</span>
@@ -341,7 +337,7 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
 
   // Sidebar inner content (shared between desktop fixed & mobile drawer)
   const sidebarContent = (
-    <div 
+    <div
       className="flex flex-col h-full bg-cover bg-center relative text-white"
       style={{ backgroundImage: `url(${navback})` }}
     >
@@ -436,11 +432,10 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
       {/* ── Desktop Toggle Arrow ─────────────────────────────────── */}
       <button
         onClick={onToggleDesktop}
-        className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] items-center justify-center transition-all duration-300 ${
-          isDesktopOpen 
-            ? 'w-7 h-7 bg-white border border-slate-200/60 text-slate-400 shadow-md hover:text-slate-800 left-[246px] rounded-full hover:bg-slate-50' 
+        className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-[60] items-center justify-center transition-all duration-300 ${isDesktopOpen
+            ? 'w-7 h-7 bg-white border border-slate-200/60 text-slate-400 shadow-md hover:text-slate-800 left-[246px] rounded-full hover:bg-slate-50'
             : 'w-8 h-14 bg-blue-600 text-white shadow-lg left-0 rounded-r-xl border border-l-0 border-blue-700 hover:w-10 hover:bg-blue-700'
-        }`}
+          }`}
         aria-label="Basculer le menu"
       >
         {isDesktopOpen ? <ChevronLeft size={16} /> : <ChevronRight size={20} />}

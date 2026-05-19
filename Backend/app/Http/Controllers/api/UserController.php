@@ -9,6 +9,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\UserCreatedMail;
 
 class UserController extends Controller
 {
@@ -57,6 +59,12 @@ class UserController extends Controller
             'role'      => $validated['role'],
             'is_active' => true,
         ]);
+
+        try {
+            Mail::to($user->email)->send(new UserCreatedMail($user, $validated['password']));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to send user creation email to {$user->email}: " . $e->getMessage());
+        }
 
         ActivityLog::record('CREATE', $user, "Nouvel utilisateur : {$user->name} ({$user->role})");
 
