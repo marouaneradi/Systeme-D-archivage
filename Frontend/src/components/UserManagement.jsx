@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   UserPlus, Search, Shield, Edit3,
-  Trash2, CheckCircle, XCircle, Mail, User, AlertCircle, X,
+  CheckCircle, XCircle, Mail, User, AlertCircle, X, Ban, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../services/api';
@@ -391,6 +391,13 @@ export const UserManagement = () => {
                           className="p-2 text-secondary hover:text-primary hover:bg-surface-container-low rounded-lg transition-all"
                           title="Modifier">
                           <Edit3 size={16} />
+                        </button>
+                        <button onClick={() => handleToggleActive(u)}
+                          className={`p-2 rounded-lg transition-all ${
+                            u.is_active ? 'text-secondary hover:text-orange-600 hover:bg-orange-50' : 'text-secondary hover:text-green-600 hover:bg-green-50'
+                          }`}
+                          title={u.is_active ? 'Bloquer' : 'Débloquer'}>
+                          {u.is_active ? <Ban size={16} /> : <CheckCircle size={16} />}
                         </button>
                         <button onClick={() => setDeletingUser(u)}
                           className="p-2 text-secondary hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
