@@ -94,6 +94,34 @@ class AuthController extends Controller
     }
 
     /**
+     * POST /api/auth/change-password
+     * Change the authenticated user's password.
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'new_password'     => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->current_password, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Le mot de passe actuel est incorrect.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        ActivityLog::record('UPDATE', $user, 'Mot de passe modifié par l\'utilisateur', ['action' => 'change_password']);
+
+        return response()->json(['message' => 'Mot de passe modifié avec succès.']);
+    }
+
+    /**
      * Map roles to Sanctum token abilities.
      */
     private function abilitiesFor(string $role): array

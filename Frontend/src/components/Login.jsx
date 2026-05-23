@@ -65,6 +65,19 @@ export default function Login({ onLogin }) {
     }
   };
 
+  const handleResendCode = async () => {
+    clearMessages();
+    setLoading(true);
+    try {
+      await authService.forgotPassword(resetEmail);
+      setSuccess('Un nouveau code a été envoyé à votre adresse e-mail.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erreur lors du renvoi du code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleForgotCodeSubmit = async (e) => {
     e.preventDefault();
     clearMessages();
@@ -299,6 +312,12 @@ export default function Login({ onLogin }) {
                   <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary text-white rounded-xl font-black text-sm uppercase tracking-[0.15em] hover:bg-primary-container transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2">
                     {loading ? 'Vérification…' : <><CheckCircle size={18} />Vérifier</>}
                   </button>
+
+                  <div className="text-center mt-4">
+                    <button type="button" onClick={handleResendCode} disabled={loading} className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest disabled:opacity-50">
+                      Renvoyer le code
+                    </button>
+                  </div>
                 </form>
               </motion.div>
             )}

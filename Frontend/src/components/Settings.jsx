@@ -11,8 +11,10 @@ import {
   Eye,
   EyeOff,
   Shield,
+  XCircle,
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { authService } from '../services/api';
 
 // ── Sub-components ────────────────────────────────────────────────
 
@@ -61,6 +63,146 @@ const Toggle = ({ label, description, checked, onChange }) => (
 
 const inputCls = 'w-full px-4 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary focus:bg-white outline-none transition-all';
 
+// ── Password Modal ────────────────────────────────────────────────
+const PasswordModal = ({ isOpen, onClose }) => {
+  const [passwords, setPasswords] = useState({ current: '', newPw: '', confirm: '' });
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw]         = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (passwords.newPw !== passwords.confirm) {
+      setError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.changePassword(passwords.current, passwords.newPw, passwords.confirm);
+      setSuccess('Mot de passe modifié avec succès.');
+      // Optional: close after a small delay
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (err) {
+      setError(
+        err.response?.data?.errors?.current_password?.[0] ||
+        err.response?.data?.errors?.new_password?.[0] ||
+        err.response?.data?.message ||
+        'Erreur lors de la modification.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 space-y-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-black text-primary tracking-tight">
+            Changer le mot de passe
+          </h3>
+          <button onClick={onClose} className="text-secondary hover:text-primary transition-colors">
+            <XCircle size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700">
+              <p className="text-sm font-semibold">{error}</p>
+            </div>
+          )}
+          {success && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700">
+              <p className="text-sm font-semibold">{success}</p>
+            </div>
+          )}
+
+          <Field label="Mot de passe actuel">
+            <div className="relative">
+              <input
+                type={showCurrentPw ? 'text' : 'password'}
+                value={passwords.current}
+                onChange={(e) => setPasswords((p) => ({ ...p, current: e.target.value }))}
+                placeholder="••••••••"
+                className={`${inputCls} pr-12`}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPw(!showCurrentPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors"
+              >
+                {showCurrentPw ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </Field>
+          
+          <Field label="Nouveau mot de passe" hint="Minimum 8 caractères">
+            <div className="relative">
+              <input
+                type={showNewPw ? 'text' : 'password'}
+                value={passwords.newPw}
+                onChange={(e) => setPasswords((p) => ({ ...p, newPw: e.target.value }))}
+                placeholder="••••••••"
+                className={`${inputCls} pr-12`}
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPw(!showNewPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors"
+              >
+                {showNewPw ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </Field>
+          
+          <Field label="Confirmer le mot de passe">
+            <input
+              type="password"
+              value={passwords.confirm}
+              onChange={(e) => setPasswords((p) => ({ ...p, confirm: e.target.value }))}
+              placeholder="••••••••"
+              className={inputCls}
+              required
+              minLength={8}
+            />
+          </Field>
+
+          <div className="flex gap-3 pt-4">
+            <button type="button" onClick={onClose} disabled={loading}
+              className="flex-1 py-3 border border-outline-variant rounded-xl bg-white text-primary font-bold text-sm uppercase tracking-wider hover:bg-surface-container-low transition-all disabled:opacity-50">
+              Annuler
+            </button>
+            <button type="submit" disabled={loading}
+              className="flex-1 py-3 bg-primary text-white rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-primary-container transition-all shadow-lg shadow-primary/20 disabled:opacity-60">
+              {loading ? 'Enregistrement…' : 'Confirmer'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+};
+
 // ── Main Component ────────────────────────────────────────────────
 export const Settings = () => {
   const [saved, setSaved] = useState(false);
@@ -71,8 +213,8 @@ export const Settings = () => {
   const storedUser = (() => { try { return JSON.parse(sessionStorage.getItem('auth_user') ?? '{}'); } catch { return {}; } })();
   const [profile, setProfile] = useState({ name: storedUser.name ?? '', email: storedUser.email ?? '' });
 
-  // Password change
-  const [passwords, setPasswords] = useState({ current: '', newPw: '', confirm: '' });
+  // Password modal
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   // System settings (admin-only)
   const [system, setSystem] = useState({
@@ -97,7 +239,13 @@ export const Settings = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <>
+      <AnimatePresence>
+        {isPasswordModalOpen && (
+          <PasswordModal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} />
+        )}
+      </AnimatePresence>
+      <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -140,54 +288,13 @@ export const Settings = () => {
       </Section>
 
       {/* ── Section 2: Password ────────────────────────────────── */}
-      <Section icon={Lock} title="Sécurité" description="Modifier votre mot de passe">
-        <Field label="Mot de passe actuel">
-          <div className="relative">
-            <input
-              type={showCurrentPw ? 'text' : 'password'}
-              value={passwords.current}
-              onChange={(e) => setPasswords((p) => ({ ...p, current: e.target.value }))}
-              placeholder="••••••••"
-              className={`${inputCls} pr-12`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowCurrentPw(!showCurrentPw)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors"
-            >
-              {showCurrentPw ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-        </Field>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <Field label="Nouveau mot de passe" hint="Minimum 8 caractères">
-            <div className="relative">
-              <input
-                type={showNewPw ? 'text' : 'password'}
-                value={passwords.newPw}
-                onChange={(e) => setPasswords((p) => ({ ...p, newPw: e.target.value }))}
-                placeholder="••••••••"
-                className={`${inputCls} pr-12`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPw(!showNewPw)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors"
-              >
-                {showNewPw ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </Field>
-          <Field label="Confirmer le mot de passe">
-            <input
-              type="password"
-              value={passwords.confirm}
-              onChange={(e) => setPasswords((p) => ({ ...p, confirm: e.target.value }))}
-              placeholder="••••••••"
-              className={inputCls}
-            />
-          </Field>
-        </div>
+      <Section icon={Lock} title="Sécurité" description="Gérez la sécurité de votre compte">
+        <button
+          onClick={() => setIsPasswordModalOpen(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant text-primary rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-surface-container-low transition-all"
+        >
+          <Lock size={18} /> Changer le mot de passe
+        </button>
       </Section>
 
       {/* ── Section 3: Notifications ──────────────────────────── */}
@@ -282,5 +389,6 @@ export const Settings = () => {
         </div>
       </Section>
     </div>
+    </>
   );
 };

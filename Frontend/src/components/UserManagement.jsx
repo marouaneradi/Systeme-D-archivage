@@ -366,7 +366,7 @@ export const UserManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${ROLE_STYLE[u.role] ?? 'bg-surface-container text-secondary border-outline-variant'}`}>
+                      <span className={`inline-flex justify-center w-32 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${ROLE_STYLE[u.role] ?? 'bg-surface-container text-secondary border-outline-variant'}`}>
                         {ROLE_LABEL[u.role] ?? u.role}
                       </span>
                     </td>

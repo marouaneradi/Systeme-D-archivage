@@ -51,6 +51,7 @@ export const authService = {
   forgotPassword: (email)           => api.post('/auth/forgot-password', { email }),
   verifyCode:     (email, code)     => api.post('/auth/verify-code', { email, code }),
   resetPassword:  (email, code, password, password_confirmation) => api.post('/auth/reset-password', { email, code, password, password_confirmation }),
+  changePassword: (current_password, new_password, new_password_confirmation) => api.post('/auth/change-password', { current_password, new_password, new_password_confirmation }),
 };
 
 export default api;
