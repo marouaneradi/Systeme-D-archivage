@@ -106,13 +106,13 @@ const PvTotalCard = ({ archived, expected, loading }) => {
 const MONTHS = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUN', 'JUL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
 
 const BarChart = ({ data, loading }) => {
-  const max = Math.max(...data.map((d) => d.count), 1);
+  const max = Math.max(...data.map((d) => Number(d.count) || 0), 1);
   return (
     <div>
       <div className="h-48 flex items-end gap-2 pb-2">
         {MONTHS.map((m, i) => {
-          const item = data.find((d) => d.month === i + 1);
-          const count = item?.count ?? 0;
+          const item = data.find((d) => Number(d.month) === i + 1);
+          const count = Number(item?.count) || 0;
           const pct = Math.max((count / max) * 100, 4);
           return (
             <div key={m} className="flex-1 flex flex-col items-center gap-1 group relative">
@@ -282,9 +282,9 @@ export const Dashboard = ({ onNavigate, user }) => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-primary truncate">{log.target_label ?? '—'}</p>
-                          <p className="text-xs text-secondary">{log.user?.name ?? '—'} · {fmtDate(log.created_at)}</p>
+                          <p className="text-xs text-secondary">{fmtDate(log.created_at)}</p>
                         </div>
-                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full text-white ${mapped.color} flex-shrink-0`}>
+                        <span className={`w-28 text-center text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full text-white ${mapped.color} flex-shrink-0`}>
                           {mapped.label}
                         </span>
                       </motion.div>

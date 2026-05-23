@@ -24,8 +24,13 @@ Route::get('/ping', fn () => response()->json([
     'version' => '1.0.0',
 ]));
 
+use App\Http\Controllers\Api\PasswordResetController;
+
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+    Route::post('/verify-code', [PasswordResetController::class, 'verifyCode']);
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 });
 
 // ── Protected routes ──────────────────────────────────────────────
