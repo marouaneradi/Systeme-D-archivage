@@ -10,15 +10,6 @@ export default function Login({ onLogin }) {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-
-  useEffect(() => {
-    const savedEmail = localStorage.getItem('remembered_email');
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberMe(true);
-    }
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,15 +24,9 @@ export default function Login({ onLogin }) {
     try {
       const { data } = await authService.login(email, password);
 
-      if (rememberMe) {
-        localStorage.setItem('remembered_email', email);
-      } else {
-        localStorage.removeItem('remembered_email');
-      }
-
-      // Persist token and user in localStorage
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      // Persist token and user in sessionStorage
+      sessionStorage.setItem('auth_token', data.token);
+      sessionStorage.setItem('auth_user', JSON.stringify(data.user));
 
       onLogin(data.user);
     } catch (err) {
@@ -192,16 +177,7 @@ export default function Login({ onLogin }) {
             </div>
 
             {/* Options */}
-            <div className="flex items-center justify-between mt-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-outline-variant/50 text-primary focus:ring-primary accent-primary"
-                />
-                <span className="text-sm font-semibold text-secondary">Se souvenir de moi</span>
-              </label>
+            <div className="flex items-center justify-end mt-2">
               <button
                 type="button"
                 className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest"

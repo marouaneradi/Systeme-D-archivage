@@ -35,7 +35,6 @@ const UserModal = ({ user, onClose, onSave, saving, errors }) => {
     name:     user?.name  ?? '',
     email:    user?.email ?? '',
     role:     user?.role  ?? 'consultant',
-    password: '',
   });
 
   const isEdit = !!user;
@@ -107,18 +106,6 @@ const UserModal = ({ user, onClose, onSave, saving, errors }) => {
             </div>
           </div>
 
-          {/* Password */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-secondary uppercase tracking-widest">
-              {isEdit ? 'Nouveau mot de passe (laisser vide = inchangé)' : 'Mot de passe *'}
-            </label>
-            <input type="password" value={form.password} onChange={(e) => set('password', e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary focus:bg-white outline-none transition-all" />
-            {isEdit && (
-              <p className="text-[10px] text-outline font-medium ml-1">Minimum 8 caractères si renseigné.</p>
-            )}
-          </div>
         </div>
 
         {/* Actions */}
@@ -219,12 +206,10 @@ export const UserManagement = () => {
     setFieldErrors({});
     try {
       const payload = { name: form.name, email: form.email, role: form.role };
-      if (form.password) payload.password = form.password;
 
       if (editingUser) {
         await api.put(`/users/${editingUser.id}`, payload);
       } else {
-        payload.password = form.password; // required on create
         await api.post('/users', payload);
       }
       setModalOpen(false);

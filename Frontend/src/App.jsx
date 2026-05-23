@@ -26,7 +26,7 @@ export default function App() {
 
   // ── On mount: verify token via /auth/me ──────────────────────────
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    const token = sessionStorage.getItem('auth_token');
     if (!token) {
       setAuthLoading(false);
       return;
@@ -36,13 +36,13 @@ export default function App() {
       .then(({ data }) => {
         // Token still valid — restore user from server (fresh data)
         setUser(data);
-        // Sync localStorage with latest user data
-        localStorage.setItem('auth_user', JSON.stringify(data));
+        // Sync sessionStorage with latest user data
+        sessionStorage.setItem('auth_user', JSON.stringify(data));
       })
       .catch(() => {
         // Token expired or invalid — clean up
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_user');
         setUser(null);
       })
       .finally(() => setAuthLoading(false));
@@ -55,8 +55,8 @@ export default function App() {
 
   const handleLogout = async () => {
     try { await authService.logout(); } catch { /* ignore */ }
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_user');
     setUser(null);
   };
 
@@ -186,13 +186,9 @@ export default function App() {
         </main>
 
         <footer className="px-12 py-6 border-t border-outline-variant/20 flex justify-between items-center bg-white/50">
-          <p className="text-[10px] font-bold text-secondary uppercase tracking-widest italic">
-            Confidentialité & Sécurité des données institutionnelles garanties.
+          <p className="text-[10px] font-bold text-secondary uppercase tracking-widest italic flex items-center gap-1">
+            &copy; Archive Team. All rights are reserved.
           </p>
-          <div className="flex gap-6">
-            <button className="text-[10px] font-black text-secondary hover:text-primary transition-colors uppercase tracking-widest">Support</button>
-            <button className="text-[10px] font-black text-secondary hover:text-primary transition-colors uppercase tracking-widest">Documentation</button>
-          </div>
         </footer>
       </div>
     </div>

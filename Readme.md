@@ -289,6 +289,21 @@ Systeme-D-archivage/
 
 ---
 
+## 🖥️ Options de l'Interface Web (Menu Principal)
+
+L'application web propose les vues et options suivantes, accessibles via la barre de navigation selon le rôle de l'utilisateur :
+
+- **📊 Tableau de Bord (Dashboard)** : Vue d'ensemble avec des statistiques clés en temps réel (nombre de PVs, répartition par statut, activité récente).
+- **📁 Liste des Documents (Documents List)** : Affichage, filtrage et gestion de tous les PV (FF, CC, EFM). Permet de changer les statuts (Validation, Archivage, etc.).
+- **➕ Ajouter un PV (Add PV)** : Formulaire de création d'un nouveau Procès-Verbal avec options pour renseigner les métadonnées et uploader les pièces jointes associées.
+- **👁️ Détails du PV (PV Detail)** : Page détaillée d'un document, listant les fichiers joints, le statut actuel, et l'arborescence des PVs enfants (pour les PV-FF).
+- **🔍 Recherche Avancée (Advanced Search)** : Interface multicritères puissante pour retrouver des documents précis, avec la possibilité d'exporter les résultats en PDF et Excel.
+- **⏱️ Journal d'Activité (Activity Log)** : Historique traçable de toutes les actions effectuées sur la plateforme (qui a modifié quoi et quand).
+- **👥 Gestion des Utilisateurs (User Management)** : Espace d'administration exclusif pour ajouter, désactiver ou modifier les rôles et informations des comptes utilisateurs.
+- **⚙️ Paramètres (Settings)** : Configuration des préférences du système et gestion du profil.
+
+---
+
 ## 📧 Configuration de l'envoi d'emails (SMTP)
 
 L'application envoie automatiquement un email contenant les accès lorsqu'un administrateur crée un nouvel utilisateur. Pour que cela fonctionne en local ou en production, mettez à jour votre fichier `Backend/.env` :

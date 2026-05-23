@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use App\Mail\UserCreatedMail;
 
 class UserController extends Controller
@@ -48,20 +49,21 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:100'],
             'email'    => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
             'role'     => ['required', Rule::in(['admin', 'gestionnaire', 'archiviste', 'consultant'])],
         ]);
+
+        $generatedPassword = Str::random(10);
 
         $user = User::create([
             'name'      => $validated['name'],
             'email'     => $validated['email'],
-            'password'  => Hash::make($validated['password']),
+            'password'  => Hash::make($generatedPassword),
             'role'      => $validated['role'],
             'is_active' => true,
         ]);
 
         try {
-            Mail::to($user->email)->send(new UserCreatedMail($user, $validated['password']));
+            Mail::to($user->email)->send(new UserCreatedMail($user, $generatedPassword));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Failed to send user creation email to {$user->email}: " . $e->getMessage());
         }

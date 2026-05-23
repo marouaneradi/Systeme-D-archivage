@@ -81,7 +81,33 @@ export const AddPV = ({ onNavigate }) => {
   useEffect(() => {
     setLoadingYears(true);
     api.get('/training/academic-years')
-      .then(({ data }) => setAcademicYears(data))
+      .then(({ data }) => {
+        setAcademicYears(data);
+        
+        // Auto-select current academic year based on today's date
+        if (data && data.length > 0) {
+          const now = new Date();
+          const currentYear = now.getFullYear();
+          const currentMonth = now.getMonth(); // 0-11
+          
+          // If month is before September (0-7), the academic year started last year.
+          const startYear = currentMonth < 8 ? currentYear - 1 : currentYear;
+          const endYear = startYear + 1;
+          
+          const expectedLabel1 = `${startYear}-${endYear}`;
+          const expectedLabel2 = `${startYear}/${endYear}`;
+          
+          const currentYearObj = data.find(y => {
+            const cleanLabel = y.label ? y.label.replace(/\s+/g, '') : '';
+            return cleanLabel.includes(expectedLabel1) || cleanLabel.includes(expectedLabel2);
+          });
+
+          if (currentYearObj) {
+            setForm(prev => ({ ...prev, academicYearId: currentYearObj.id }));
+            setFieldErrors(prev => ({ ...prev, academicYearId: '' }));
+          }
+        }
+      })
       .catch(() => setAcademicYears([]))
       .finally(() => setLoadingYears(false));
   }, []);

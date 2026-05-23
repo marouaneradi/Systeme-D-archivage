@@ -31,10 +31,23 @@ class PvFileController extends Controller
 
         $uploaded = [];
 
+        $index = $pvDocument->files()->count() + 1;
+
         foreach ($request->file('files') as $file) {
-            // Generate a unique stored filename
             $extension   = $file->getClientOriginalExtension();
-            $storedName  = Str::uuid() . '.' . $extension;
+            
+            $safeType    = preg_replace('/[^A-Za-z0-9]/', '_', $pvDocument->type ?? 'PV');
+            $safeYear    = preg_replace('/[^A-Za-z0-9]/', '_', $pvDocument->academic_year ?? 'annee');
+            $safeFiliere = preg_replace('/[^A-Za-z0-9]/', '_', $pvDocument->filiere ?? 'filiere');
+            $safeGroupe  = preg_replace('/[^A-Za-z0-9]/', '_', $pvDocument->groupe ?? 'groupe');
+            
+            $baseName = strtoupper("{$safeType}_{$safeYear}_{$safeFiliere}_{$safeGroupe}");
+            $baseName = preg_replace('/_+/', '_', $baseName); // clean up double underscores
+            
+            $newName = "{$baseName}_{$index}.{$extension}";
+            
+            // Use the descriptive name for the physical file too, appending a unique id to avoid collisions
+            $storedName  = "{$baseName}_{$index}_" . uniqid() . '.' . $extension;
             $storagePath = "pv_files/{$pvDocument->id}";
 
             // Store in storage/app/private/pv_files/{pvDocument->id}/
@@ -42,7 +55,7 @@ class PvFileController extends Controller
 
             $pvFile = PvFile::create([
                 'pv_document_id' => $pvDocument->id,
-                'original_name'  => $file->getClientOriginalName(),
+                'original_name'  => $newName,
                 'stored_name'    => $storedName,
                 'file_path'      => $path,
                 'file_type'      => strtolower($extension),
@@ -51,6 +64,7 @@ class PvFileController extends Controller
             ]);
 
             $uploaded[] = $pvFile->load('uploader:id,name');
+            $index++;
         }
 
         ActivityLog::record(
