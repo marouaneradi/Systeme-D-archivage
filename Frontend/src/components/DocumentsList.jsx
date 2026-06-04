@@ -52,8 +52,8 @@ export const DocumentsList = ({ onViewPv, yearId = null, pvType = null, yearLabe
   const [statusFilter, setStatusFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Sync when tree navigation sends new props
-  useEffect(() => { setTypeFilter(pvType ?? ''); setCurrentPage(1); }, [pvType]);
+  // Sync when tree navigation sends new props — also clear status filter so it doesn't bleed across pages
+  useEffect(() => { setTypeFilter(pvType ?? ''); setStatusFilter(''); setShowFilters(false); setCurrentPage(1); }, [pvType]);
   useEffect(() => { setCurrentPage(1); }, [yearId, niveau]);
 
   const fetchDocuments = useCallback(async () => {
@@ -105,8 +105,8 @@ export const DocumentsList = ({ onViewPv, yearId = null, pvType = null, yearLabe
           {(yearLabel || pvType) && (
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               {yearLabel && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-black bg-primary/10 text-primary px-2.5 py-1 rounded-full uppercase tracking-widest">
-                  📅 {yearLabel}
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-black bg-primary/10 text-primary px-2.5 py-1 rounded-full uppercase tracking-widest">
+                  <img src="data:image/png;base64,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" alt="calendar" className="w-3.5 h-3.5 object-contain" /> {yearLabel}
                 </span>
               )}
               {pvType && TYPE_MAP[pvType] && (
@@ -136,13 +136,13 @@ export const DocumentsList = ({ onViewPv, yearId = null, pvType = null, yearLabe
           </div>
           <button
             onClick={() => setShowFilters((v) => !v)}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg font-bold text-[10px] uppercase tracking-[0.15em] transition-all flex-shrink-0 ${showFilters || typeFilter || statusFilter
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg font-bold text-[10px] uppercase tracking-[0.15em] transition-all flex-shrink-0 ${showFilters || (!pvType && typeFilter) || statusFilter
               ? 'border-primary bg-primary text-white'
               : 'border-outline-variant/60 bg-white text-secondary hover:text-primary hover:bg-surface-container-low'
               }`}
           >
             <Filter size={16} />
-            <span className="hidden sm:inline">Filtres</span> {(typeFilter || statusFilter) ? '●' : ''}
+            <span className="hidden sm:inline">Filtres</span> {((!pvType && typeFilter) || statusFilter) ? '●' : ''}
           </button>
         </div>
       </div>
@@ -150,16 +150,18 @@ export const DocumentsList = ({ onViewPv, yearId = null, pvType = null, yearLabe
       {/* Filter bar */}
       {showFilters && (
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 p-4 bg-white border border-outline-variant/50 rounded-xl">
-          <select
-            value={typeFilter}
-            onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 border border-outline-variant/50 rounded-lg text-xs font-bold bg-surface-container-low outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
-          >
-            <option value="">Tous les types</option>
-            <option value="PV_FF">PV-FF</option>
-            <option value="PV_PASSAGE">PV-Passage</option>
-            <option value="PV_INTERMEDIAIRE">PV-Intermédiaire</option>
-          </select>
+          {!pvType && (
+            <select
+              value={typeFilter}
+              onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
+              className="px-3 py-2 border border-outline-variant/50 rounded-lg text-xs font-bold bg-surface-container-low outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
+            >
+              <option value="">Tous les types</option>
+              <option value="PV_FF">PV-FF</option>
+              <option value="PV_PASSAGE">PV-Passage</option>
+              <option value="PV_INTERMEDIAIRE">PV-Intermédiaire</option>
+            </select>
+          )}
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
@@ -170,9 +172,9 @@ export const DocumentsList = ({ onViewPv, yearId = null, pvType = null, yearLabe
               <option key={k} value={k}>{v.label}</option>
             ))}
           </select>
-          {(typeFilter || statusFilter) && (
+          {((!pvType && typeFilter) || statusFilter) && (
             <button
-              onClick={() => { setTypeFilter(''); setStatusFilter(''); setCurrentPage(1); }}
+              onClick={() => { setTypeFilter(pvType ?? ''); setStatusFilter(''); setCurrentPage(1); }}
               className="px-3 py-2 text-xs font-black text-red-600 hover:bg-red-50 rounded-lg transition-colors uppercase tracking-widest"
             >
               Réinitialiser
