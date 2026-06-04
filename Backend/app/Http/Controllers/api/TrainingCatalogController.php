@@ -114,4 +114,23 @@ class TrainingCatalogController extends Controller
             'data' => $academicYear,
         ]);
     }
+
+    public function destroy($id): JsonResponse
+    {
+        $academicYear = AcademicYear::findOrFail($id);
+
+        $hasDocuments = \App\Models\PvDocument::where('academic_year_id', $id)->exists();
+
+        if ($hasDocuments) {
+            return response()->json([
+                'message' => 'Impossible de supprimer cette promotion car elle contient des documents PV.'
+            ], 422);
+        }
+
+        $academicYear->delete();
+
+        return response()->json([
+            'message' => 'Promotion supprimée avec succès.'
+        ]);
+    }
 }

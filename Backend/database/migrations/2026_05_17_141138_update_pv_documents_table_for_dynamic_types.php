@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Update ENUM for type
-        DB::statement("ALTER TABLE pv_documents MODIFY COLUMN type ENUM('PV_FF', 'PV_CC', 'PV_EFM', 'PV_PASSAGE', 'PV_INTERMEDIAIRE') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE pv_documents MODIFY COLUMN type ENUM('PV_FF', 'PV_CC', 'PV_EFM', 'PV_PASSAGE', 'PV_INTERMEDIAIRE') NOT NULL");
+        }
 
         Schema::table('pv_documents', function (Blueprint $table) {
             $table->decimal('eff_grade', 5, 2)->nullable()->after('notes');
@@ -32,6 +33,8 @@ return new class extends Migration
         });
 
         // Revert ENUM
-        DB::statement("ALTER TABLE pv_documents MODIFY COLUMN type ENUM('PV_FF', 'PV_CC', 'PV_EFM') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE pv_documents MODIFY COLUMN type ENUM('PV_FF', 'PV_CC', 'PV_EFM') NOT NULL");
+        }
     }
 };

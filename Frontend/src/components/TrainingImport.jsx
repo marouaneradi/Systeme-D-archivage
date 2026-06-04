@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, CheckCircle2, Info, X, Plus, ChevronRight } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, Info, Plus, ChevronRight, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
 const inputCls = 'w-full bg-surface-container-low/50 border border-outline-variant/50 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-primary focus:bg-white outline-none transition-all';
@@ -8,14 +8,8 @@ const buttonSecondary = 'inline-flex items-center justify-center gap-2 w-full px
 
 export const TrainingImport = ({ onNavigate, user }) => {
   const isAdmin = user?.role === 'admin';
-  // Step 1: Promotion creation
+  // Form state
   const [promotionYear, setPromotionYear] = useState(''); // format: 'YYYY-YYYY'
-
-  const [creatingPromotion, setCreatingPromotion] = useState(false);
-  const [promotionError, setPromotionError] = useState('');
-
-  // Step 2: File import (only shown after promotion is created)
-  const [currentPromotion, setCurrentPromotion] = useState(null);
   const [file, setFile] = useState(null);
   const [years, setYears] = useState([]);
   const [loadingYears, setLoadingYears] = useState(true);
@@ -32,8 +26,7 @@ export const TrainingImport = ({ onNavigate, user }) => {
       .finally(() => setLoadingYears(false));
   }, []);
 
-  // ── STEP 1: Create Promotion ────────────────────────────────────
-  // Parse and validate the "YYYY-YYYY" input
+  // ── Form Handling ──────────────────────────────────────────────
   const parseAcademicYear = (value) => {
     const match = value.trim().match(/^(\d{4})-(\d{4})$/);
     if (!match) return null;
@@ -41,48 +34,9 @@ export const TrainingImport = ({ onNavigate, user }) => {
     const end   = parseInt(match[2], 10);
     if (end !== start + 1) return null;
     if (start < 2000 || start > 2100) return null;
-    return start; // backend expects the start year as integer
+    return start;
   };
 
-  const handleCreatePromotion = async (e) => {
-    e.preventDefault();
-    setPromotionError('');
-
-    const year = parseAcademicYear(promotionYear);
-    if (!year) {
-      setPromotionError('Format invalide. Utilisez le format AAAA-AAAA (ex : 2025-2026).');
-      return;
-    }
-
-    setCreatingPromotion(true);
-
-    try {
-      const response = await api.post('/training/academic-years', {
-        year: year,
-      });
-
-      const newPromotion = response.data?.data ?? {};
-      setCurrentPromotion(newPromotion);
-      setYears((prev) => [
-        ...prev.filter((y) => y.id !== newPromotion.id),
-        newPromotion,
-      ]);
-      setPromotionYear('');
-      setImportResult(null);
-    } catch (err) {
-      if (err.response?.status === 422) {
-        const errors = err.response.data.errors ?? {};
-        const firstError = Object.values(errors)[0];
-        setPromotionError(Array.isArray(firstError) ? firstError[0] : firstError || 'Erreur de validation.');
-      } else {
-        setPromotionError(err.response?.data?.message ?? 'Impossible de créer la promotion.');
-      }
-    } finally {
-      setCreatingPromotion(false);
-    }
-  };
-
-  // ── STEP 2: Import Training Catalog ────────────────────────────
   const handleFileChange = (event) => {
     setImportError('');
     setImportResult(null);
@@ -97,12 +51,15 @@ export const TrainingImport = ({ onNavigate, user }) => {
 
   const handleImportSubmit = async (event) => {
     event.preventDefault();
-    if (!file) {
-      setImportError('Sélectionnez un fichier XLSX avant de lancer l\'import.');
+    
+    const year = parseAcademicYear(promotionYear);
+    if (!year) {
+      setImportError('Format d\'année invalide. Utilisez le format AAAA-AAAA (ex : 2025-2026).');
       return;
     }
-    if (!currentPromotion?.id) {
-      setImportError('Aucune promotion sélectionnée.');
+    
+    if (!file) {
+      setImportError('Sélectionnez un fichier XLSX avant de lancer l\'import.');
       return;
     }
 
@@ -113,15 +70,21 @@ export const TrainingImport = ({ onNavigate, user }) => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('academic_year_id', currentPromotion.id);
+      formData.append('year', year);
 
       const response = await api.post('/training/import', formData);
       const importData = response.data?.data ?? {};
       setImportResult(importData);
       setFile(null);
+      
+      // Refresh the years list to include the newly created one
+      api.get('/training/academic-years')
+        .then(({ data }) => setYears(data))
+        .catch(() => {});
+        
     } catch (err) {
       if (err.response?.status === 422) {
-        setImportError('Le fichier est invalide ou le format ne correspond pas.');
+        setImportError(err.response?.data?.message || 'Le fichier est invalide ou le format ne correspond pas.');
       } else {
         setImportError(err.response?.data?.message ?? 'Impossible d\'importer le fichier.');
       }
@@ -130,8 +93,18 @@ export const TrainingImport = ({ onNavigate, user }) => {
     }
   };
 
+  const handleDeletePromotion = async (id) => {
+    if (!window.confirm('Voulez-vous vraiment supprimer cette promotion ?')) return;
+    
+    try {
+      await api.delete(`/training/academic-years/${id}`);
+      setYears(prev => prev.filter(y => y.id !== id));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Impossible de supprimer la promotion.');
+    }
+  };
+
   const handleReset = () => {
-    setCurrentPromotion(null);
     setFile(null);
     setImportResult(null);
     setPromotionYear('');
@@ -148,101 +121,71 @@ export const TrainingImport = ({ onNavigate, user }) => {
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Nouvelle Promotion</span>
         </div>
         <h1 className="text-3xl font-black text-primary tracking-tighter uppercase">Nouvelle Promotion</h1>
-        <p className="text-secondary text-sm font-medium mt-1 max-w-2xl">
-          Créez d'abord une promotion, puis importez la carte de formation Excel pour y ajouter filières et groupes.
-        </p>
-      </div>
-
-      {/* ── STEP 1: Promotion Creation ────────────────────────────── */}
-      <div className="bg-white border border-outline-variant rounded-3xl p-8 shadow-sm space-y-4">
-        <div className="flex items-center gap-3 border-b border-outline-variant/30 pb-4">
-          <div className="p-3 bg-primary text-white rounded-2xl"><Plus size={20} /></div>
-          <div>
-            <h2 className="text-lg font-black text-primary uppercase tracking-tight">Étape 1 — Créer une promotion</h2>
-            <p className="text-sm text-secondary">Saisissez l'année académique pour créer la promotion.</p>
-          </div>
-        </div>
-
-        {!isAdmin ? (
-          <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-4 flex gap-3">
-            <Info size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-black text-amber-700 text-sm">Accès restreint</p>
-              <p className="text-xs text-amber-600 mt-1">Seul l'administrateur peut créer une promotion. Contactez votre administrateur.</p>
-            </div>
-          </div>
-        ) : !currentPromotion ? (
-          <form onSubmit={handleCreatePromotion} className="space-y-5">
-            <div className="space-y-2">
-              <label htmlFor="year-input" className="block text-[10px] font-black uppercase tracking-widest text-secondary">
-                Année académique *
-              </label>
-              <div className="relative">
-                <input
-                  id="year-input"
-                  type="text"
-                  value={promotionYear}
-                  onChange={(e) => { setPromotionYear(e.target.value); setPromotionError(''); }}
-                  placeholder="Ex : 2025-2026"
-                  maxLength={9}
-                  className={inputCls}
-                />
-                {parseAcademicYear(promotionYear) && (
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-lg">
-                    ✓ {promotionYear.trim()}
-                  </span>
-                )}
+      {/* ── Form: Promotion Creation & File Import ────────────────────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8">
+        <div className="space-y-6 min-w-0">
+          <div className="bg-white border border-outline-variant rounded-3xl p-8 shadow-sm space-y-4">
+            <div className="flex items-center gap-3 border-b border-outline-variant/30 pb-4">
+              <div className="p-3 bg-primary text-white rounded-2xl"><Plus size={20} /></div>
+              <div>
+                <h2 className="text-lg font-black text-primary uppercase tracking-tight">Ajouter une promotion</h2>
+                <p className="text-sm text-secondary">Saisissez l'année académique et importez la carte de formation.</p>
               </div>
-              <p className="text-[10px] text-outline">Format attendu : AAAA-AAAA (ex : 2025-2026).</p>
             </div>
 
-            {promotionError && (
-              <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 flex gap-3 text-sm text-red-700">
-                <Info size={16} className="mt-0.5 flex-shrink-0" />
-                <span>{promotionError}</span>
-              </div>
-            )}
-
-            <button type="submit" disabled={creatingPromotion} className={buttonCls}>
-              {creatingPromotion ? 'Création en cours…' : 'Valider'}
-            </button>
-          </form>
-        ) : (
-          <div className="space-y-4">
-            <div className="rounded-2xl bg-green-50 border border-green-200 p-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
+            {!isAdmin ? (
+              <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-4 flex gap-3">
+                <Info size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-black text-green-700">Promotion créée</p>
-                  <p className="text-sm text-green-600 mt-1">{currentPromotion.label}</p>
-
+                  <p className="font-black text-amber-700 text-sm">Accès restreint</p>
+                  <p className="text-xs text-amber-600 mt-1">Seul l'administrateur peut créer une promotion. Contactez votre administrateur.</p>
                 </div>
               </div>
-            </div>
-
-            <button type="button" onClick={handleReset} className={buttonSecondary}>
-              Créer une autre promotion
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* ── STEP 2: File Import (only shown after promotion creation) ─ */}
-      {currentPromotion && (
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8">
-          <div className="space-y-6 min-w-0">
-            <div className="bg-white border border-outline-variant rounded-3xl p-8 shadow-sm space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/10 text-primary rounded-2xl"><Upload size={20} /></div>
-                <div>
-                  <h2 className="text-lg font-black text-primary">Étape 2 — Importer la carte de formation</h2>
-                  <p className="text-sm text-secondary">Le fichier doit contenir les colonnes : Créneau, Année, Niveau, Secteur, Code Filière, Filière et Groupe.</p>
+            ) : importResult ? (
+              <div className="space-y-4">
+                <div className="rounded-2xl bg-green-50 border border-green-200 p-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-black text-green-700">Promotion ajoutée et importation réussie</p>
+                      <p className="text-sm text-green-600 mt-2">
+                        <strong>{importResult.counts.trainingGroups}</strong> groupes et <strong>{importResult.counts.filieres}</strong> filières importés.
+                      </p>
+                    </div>
+                  </div>
                 </div>
+                <button type="button" onClick={handleReset} className={buttonSecondary}>
+                  Ajouter une autre promotion
+                </button>
               </div>
+            ) : (
               <form onSubmit={handleImportSubmit} className="space-y-5">
                 <div className="space-y-2">
+                  <label htmlFor="year-input" className="block text-[10px] font-black uppercase tracking-widest text-secondary">
+                    Année académique *
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="year-input"
+                      type="text"
+                      value={promotionYear}
+                      onChange={(e) => { setPromotionYear(e.target.value); setImportError(''); }}
+                      placeholder="Ex : 2025-2026"
+                      maxLength={9}
+                      className={inputCls}
+                    />
+                    {parseAcademicYear(promotionYear) && (
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-lg">
+                        ✓ {promotionYear.trim()}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-outline">Format attendu : AAAA-AAAA (ex : 2025-2026).</p>
+                </div>
+
+                <div className="space-y-2">
                   <label htmlFor="training-file" className="block text-[10px] font-black uppercase tracking-widest text-secondary">
-                    Fichier Carte de Formation
+                    Fichier Carte de Formation (.xlsx) *
                   </label>
                   <input id="training-file" type="file" accept=".xlsx" onChange={handleFileChange} className="hidden" />
                   <button
@@ -253,7 +196,7 @@ export const TrainingImport = ({ onNavigate, user }) => {
                     <span>{file ? file.name : 'Choisir un fichier .xlsx'}</span>
                     <Upload size={18} />
                   </button>
-                  <p className="text-[10px] text-outline">Sélectionnez le fichier Excel pour cette promotion.</p>
+                  <p className="text-[10px] text-outline">Le fichier doit contenir : Créneau, Année, Niveau, Secteur, Code Filière, Filière et Groupe.</p>
                 </div>
 
                 {importError && (
@@ -263,25 +206,12 @@ export const TrainingImport = ({ onNavigate, user }) => {
                   </div>
                 )}
 
-                {importResult && (
-                  <div className="rounded-2xl bg-green-50 border border-green-200 p-4">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-black text-green-700">Importation réussie</p>
-                        <p className="text-sm text-green-600 mt-2">
-                          <strong>{importResult.counts.trainingGroups}</strong> groupes et <strong>{importResult.counts.filieres}</strong> filières importés.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 <button type="submit" disabled={importSubmitting} className={buttonCls}>
-                  {importSubmitting ? 'Import en cours…' : 'Importer la carte de formation'}
+                  {importSubmitting ? 'Traitement en cours…' : 'Créer et Importer'}
                 </button>
               </form>
-            </div>
+            )}
+          </div>
 
             <div className="bg-white border border-outline-variant rounded-3xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
@@ -320,14 +250,21 @@ export const TrainingImport = ({ onNavigate, user }) => {
                   {years.map((year) => (
                     <div
                       key={year.id}
-                      className={`flex items-center justify-between gap-3 p-4 rounded-2xl transition-colors ${
-                        currentPromotion?.id === year.id
-                          ? 'bg-primary/10 border border-primary/30'
-                          : 'bg-surface-container-low'
-                      }`}
+                      className="flex items-center justify-between gap-3 p-4 rounded-2xl transition-colors bg-surface-container-low group"
                     >
-                      <span className="text-sm font-bold text-primary">{year.label}</span>
-                      <span className="text-[10px] uppercase font-black tracking-[0.18em] text-secondary">{year.year}</span>
+                      <div>
+                        <span className="block text-sm font-bold text-primary">{year.label}</span>
+                        <span className="block text-[10px] uppercase font-black tracking-[0.18em] text-secondary mt-1">{year.year}</span>
+                      </div>
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleDeletePromotion(year.id)}
+                          className="p-2 text-outline hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Supprimer la promotion"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -335,7 +272,7 @@ export const TrainingImport = ({ onNavigate, user }) => {
             </div>
           </aside>
         </div>
-      )}
+      </div>
     </div>
   );
 };

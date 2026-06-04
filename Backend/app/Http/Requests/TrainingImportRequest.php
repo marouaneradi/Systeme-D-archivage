@@ -15,7 +15,8 @@ class TrainingImportRequest extends FormRequest
     {
         return [
             'file' => ['required', 'file', 'mimes:xlsx'],
-            'academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
+            'academic_year_id' => ['required_without:year', 'nullable', 'integer', 'exists:academic_years,id'],
+            'year' => ['required_without:academic_year_id', 'nullable', 'integer', 'min:2000', 'max:2100'],
         ];
     }
 
@@ -25,8 +26,9 @@ class TrainingImportRequest extends FormRequest
             'file.required' => 'Un fichier Excel est requis.',
             'file.file'     => 'Le fichier téléchargé doit être un document valide.',
             'file.mimes'    => 'Le fichier doit être au format XLSX.',
-            'academic_year_id.required' => "L'année académique est requise.",
+            'academic_year_id.required_without' => "L'année académique est requise si l'ID n'est pas fourni.",
             'academic_year_id.exists'   => "L'année académique sélectionnée est invalide.",
+            'year.required_without' => "L'année académique est requise.",
         ];
     }
 }

@@ -16,7 +16,20 @@ class TrainingImportController extends Controller
     public function store(TrainingImportRequest $request): JsonResponse
     {
         $file = $request->file('file');
-        $academicYearId = $request->input('academic_year_id');
+        
+        if ($request->has('year')) {
+            $year = (int) $request->input('year');
+            $label = sprintf('%d-%d', $year, $year + 1);
+
+            $academicYear = \App\Models\AcademicYear::firstOrCreate(
+                ['year' => $year],
+                ['label' => $label, 'status' => 'draft']
+            );
+            $academicYearId = $academicYear->id;
+        } else {
+            $academicYearId = $request->input('academic_year_id');
+        }
+
         $result = $this->importService->import($file->getPathname(), $academicYearId);
 
         return response()->json([

@@ -27,10 +27,10 @@ Route::get('/ping', fn () => response()->json([
 use App\Http\Controllers\Api\PasswordResetController;
 
 Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
-    Route::post('/verify-code', [PasswordResetController::class, 'verifyCode']);
-    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->middleware('throttle:3,1');
+    Route::post('/verify-code', [PasswordResetController::class, 'verifyCode'])->middleware('throttle:5,1');
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:3,1');
 });
 
 // ── Protected routes ──────────────────────────────────────────────
@@ -102,6 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Training write — admin & gestionnaire ──────────────────────
     Route::middleware('role:admin,gestionnaire')->group(function () {
         Route::post('training/academic-years', [TrainingCatalogController::class, 'store']);
+        Route::delete('training/academic-years/{academicYear}', [TrainingCatalogController::class, 'destroy']);
         Route::post('training/import',         [TrainingImportController::class, 'store']);
     });
 

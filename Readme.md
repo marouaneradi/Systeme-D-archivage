@@ -70,11 +70,17 @@ DB_PASSWORD=
 php artisan migrate
 ```
 
-### 6. (Optionnel) Insérer des données de test
+### 6. Créer les comptes par défaut (Admin & Tests)
 
 ```bash
 php artisan db:seed
 ```
+
+> **Identifiants créés automatiquement :**
+> - **Super Admin :** `admin@ofppt.ma` / `admin1234`
+> - **Archiviste :** `archiviste@ofppt.ma` / `password123`
+> - **Gestionnaire :** `gestionnaire@ofppt.ma` / `password123`
+> - **Consultant :** `consultant@ofppt.ma` / `password123`
 
 ### 7. Créer le lien de stockage
 
@@ -126,54 +132,7 @@ npm run dev
 
 ---
 
-## 👤 Créer le premier compte admin
 
-Après les migrations, créez un utilisateur admin via Tinker :
-
-```bash
-cd Backend
-php artisan tinker
-```
-
-Puis dans Tinker :
-
-```php
-// Admin user
-\App\Models\User::create([
-    'name'      => 'Super Admin',
-    'email'     => 'admin@ofppt.ma',
-    'password'  => bcrypt('admin1234'),
-    'role'      => 'admin',
-    'is_active' => true,
-]);
-
-// Example users
-\App\Models\User::create([
-    'name'      => 'Archiviste OFPPT',
-    'email'     => 'archiviste@ofppt.ma',
-    'password'  => bcrypt('password123'),
-    'role'      => 'archiviste',
-    'is_active' => true,
-]);
-
-\App\Models\User::create([
-    'name'      => 'Gestionnaire OFPPT',
-    'email'     => 'gestionnaire@ofppt.ma',
-    'password'  => bcrypt('password123'),
-    'role'      => 'gestionnaire',
-    'is_active' => true,
-]);
-
-\App\Models\User::create([
-    'name'      => 'Consultant OFPPT',
-    'email'     => 'consultant@ofppt.ma',
-    'password'  => bcrypt('password123'),
-    'role'      => 'consultant',
-    'is_active' => true,
-]);
-```
-
----
 
 ## 👥 Rôles utilisateurs
 
@@ -320,6 +279,32 @@ MAIL_FROM_NAME="Système D'archivage"
 ```
 
 > **Important (Gmail) :** Vous ne pouvez pas utiliser votre mot de passe Gmail normal. Vous devez activer la validation en deux étapes sur votre compte Google, puis créer un "Mot de passe d'application" (16 caractères) et le coller dans `MAIL_PASSWORD`.
+
+---
+
+## 🔒 Sécurité et Déploiement en Production
+
+Avant de déployer cette application sur un serveur de production, vous **devez** effectuer les configurations suivantes pour garantir la sécurité du système :
+
+1. **Variables d'Environnement (Backend `.env`) :**
+   - `APP_ENV=production` (Désactive le mode développement)
+   - `APP_DEBUG=false` (**Crucial** : Empêche l'affichage des erreurs et des mots de passe à l'écran)
+   - `APP_URL=https://votre-domaine.com`
+   - `FRONTEND_URL=https://votre-domaine.com` (Restreint les requêtes CORS au domaine officiel)
+   - Assurez-vous d'utiliser un mot de passe fort pour `DB_PASSWORD`.
+
+2. **Certificat SSL (HTTPS) :**
+   - Assurez-vous que votre serveur web (Nginx/Apache) force l'utilisation du protocole `HTTPS`. Les tokens d'authentification Sanctum peuvent être interceptés s'ils transitent en clair sur HTTP.
+
+3. **Optimisation et Mise en Cache :**
+   - Exécutez ces commandes sur le serveur pour masquer le fichier `.env` et accélérer l'application :
+     ```bash
+     php artisan config:cache
+     php artisan route:cache
+     php artisan view:cache
+     ```
+
+*Note : Les routes d'authentification (login, mot de passe oublié) sont protégées nativement par un système de Rate Limiting (anti-brute-force).*
 
 ---
 

@@ -63,8 +63,8 @@ return new class extends Migration
         Schema::create('training_groups', function (Blueprint $table) {
             $table->id();
             $table->foreignId('academic_year_id')->constrained('academic_years')->cascadeOnDelete();
-            $table->foreignId('filiere_id')->constrained('filieres')->restrictOnDelete();
-            $table->foreignId('creneau_id')->constrained('creneaux')->restrictOnDelete();
+            $table->foreignId('filiere_id')->constrained('filieres')->cascadeOnDelete();
+            $table->foreignId('creneau_id')->constrained('creneaux')->cascadeOnDelete();
             $table->string('code', 50);
             $table->string('name', 150)->nullable();
             $table->integer('capacity')->nullable();
