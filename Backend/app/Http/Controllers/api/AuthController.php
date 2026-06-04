@@ -94,6 +94,31 @@ class AuthController extends Controller
     }
 
     /**
+     * PATCH /api/auth/me
+     * Update the authenticated user's profile (name, email).
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+        ]);
+
+        $user->update($data);
+
+        ActivityLog::record('UPDATE', $user, 'Profil mis à jour', ['action' => 'update_profile']);
+
+        return response()->json([
+            'id'    => $user->id,
+            'name'  => $user->name,
+            'email' => $user->email,
+            'role'  => $user->role,
+        ]);
+    }
+
+    /**
      * POST /api/auth/change-password
      * Change the authenticated user's password.
      */

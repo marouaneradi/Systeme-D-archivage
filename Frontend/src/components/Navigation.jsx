@@ -325,6 +325,8 @@ export const Sidebar = ({ activePage, onPageChange, user, onLogout, open, onClos
 
   const handleNav = (id) => {
     onPageChange(id);
+    // Close the Documents PV accordion when navigating away
+    if (id !== 'documents') setDocsOpen(false);
     onClose?.(); // auto-close drawer on mobile
   };
 

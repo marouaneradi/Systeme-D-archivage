@@ -50,7 +50,7 @@ const UserModal = ({ user, onClose, onSave, saving, errors }) => {
       >
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-black text-primary tracking-tight">
-            {isEdit ? "Modifier l'utilisateur" : 'Nouvel utilisateur'}
+            {isEdit ? "Modifier l'utilisateur" : 'Nouveau utilisateur'}
           </h3>
           <button onClick={onClose} className="text-secondary hover:text-primary transition-colors">
             <XCircle size={24} />
@@ -290,7 +290,7 @@ export const UserManagement = () => {
           </div>
           <button onClick={openCreate}
             className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-primary-container transition-all shadow-lg shadow-primary/20">
-            <UserPlus size={16} /> Nouvel utilisateur
+            <UserPlus size={16} /> Nouveau utilisateur
           </button>
         </div>
 

@@ -206,6 +206,8 @@ const PasswordModal = ({ isOpen, onClose }) => {
 // ── Main Component ────────────────────────────────────────────────
 export const Settings = () => {
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw]         = useState(false);
 
@@ -224,18 +226,45 @@ export const Settings = () => {
     defaultRole: 'consultant',
   });
 
-  // Notification preferences
-  const [notifs, setNotifs] = useState({
-    onUpload:   true,
-    onValidate: true,
-    onDelete:   false,
+  // Notification preferences — persisted in localStorage
+  const loadNotifs = () => {
+    try { return JSON.parse(localStorage.getItem('pv_notif_prefs') ?? 'null'); } catch { return null; }
+  };
+  const [notifs, setNotifs] = useState(loadNotifs() ?? {
+    onUpload:    true,
+    onValidate:  true,
+    onDelete:    false,
     emailDigest: false,
   });
 
-  const handleSave = () => {
-    // TODO Phase 8: POST /api/settings + PATCH /api/auth/me
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  // Save notification toggle immediately to localStorage
+  const handleNotifChange = (key, val) => {
+    const next = { ...notifs, [key]: val };
+    setNotifs(next);
+    localStorage.setItem('pv_notif_prefs', JSON.stringify(next));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError('');
+    try {
+      const { data } = await authService.updateProfile(profile.name, profile.email);
+      // Sync sessionStorage with updated user data
+      const stored = JSON.parse(sessionStorage.getItem('auth_user') ?? '{}');
+      sessionStorage.setItem('auth_user', JSON.stringify({ ...stored, name: data.name, email: data.email }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      const msg =
+        err.response?.data?.errors?.email?.[0] ||
+        err.response?.data?.errors?.name?.[0] ||
+        err.response?.data?.message ||
+        'Erreur lors de la sauvegarde.';
+      setSaveError(msg);
+      setTimeout(() => setSaveError(''), 4000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -257,11 +286,19 @@ export const Settings = () => {
         <button
           id="settings-save-btn"
           onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-primary-container transition-all shadow-lg shadow-primary/20"
+          disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-primary-container transition-all shadow-lg shadow-primary/20 disabled:opacity-60"
         >
-          {saved ? <><CheckCircle size={18} /> Enregistré !</> : <><Save size={18} /> Enregistrer</>}
+          {saved ? <><CheckCircle size={18} /> Enregistré !</> : saving ? 'Enregistrement…' : <><Save size={18} /> Enregistrer</>}
         </button>
       </div>
+
+      {/* Save error */}
+      {saveError && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-semibold">
+          {saveError}
+        </div>
+      )}
 
       {/* ── Section 1: Profile ─────────────────────────────────── */}
       <Section icon={User} title="Mon profil" description="Informations de votre compte">
@@ -304,14 +341,14 @@ export const Settings = () => {
             label="Nouvel upload"
             description="Quand un fichier est ajouté à un PV"
             checked={notifs.onUpload}
-            onChange={(v) => setNotifs((p) => ({ ...p, onUpload: v }))}
+            onChange={(v) => handleNotifChange('onUpload', v)}
           />
           <div className="pt-4">
             <Toggle
               label="Validation de document"
               description="Quand un PV change de statut"
               checked={notifs.onValidate}
-              onChange={(v) => setNotifs((p) => ({ ...p, onValidate: v }))}
+              onChange={(v) => handleNotifChange('onValidate', v)}
             />
           </div>
           <div className="pt-4">
@@ -319,7 +356,7 @@ export const Settings = () => {
               label="Suppression"
               description="Quand un document est supprimé"
               checked={notifs.onDelete}
-              onChange={(v) => setNotifs((p) => ({ ...p, onDelete: v }))}
+              onChange={(v) => handleNotifChange('onDelete', v)}
             />
           </div>
           <div className="pt-4">
@@ -327,10 +364,11 @@ export const Settings = () => {
               label="Rapport hebdomadaire par e-mail"
               description="Résumé des activités envoyé chaque lundi"
               checked={notifs.emailDigest}
-              onChange={(v) => setNotifs((p) => ({ ...p, emailDigest: v }))}
+              onChange={(v) => handleNotifChange('emailDigest', v)}
             />
           </div>
         </div>
+        <p className="text-[10px] text-outline font-medium mt-2">Les préférences de notification sont sauvegardées automatiquement.</p>
       </Section>
 
       {/* ── Section 4: System (admin only) ───────────────────── */}
